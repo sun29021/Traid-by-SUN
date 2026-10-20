@@ -22,27 +22,30 @@ if ($Build -or -not (Test-Path $dist)) {
 $env:TRAID_ENV = 'production'
 $port = if ($env:TRAID_PORT) { $env:TRAID_PORT } else { '8765' }
 $url = "http://127.0.0.1:$port"
-Write-Host "==> Starting Traid on $url (Ctrl+C to stop)"
-$server = Start-Process -FilePath $BackendPython -ArgumentList '-m', 'app' `
-    -WorkingDirectory $BackendDir -NoNewWindow -PassThru
+Write-Host "==> Starting Traid on $url (close this window or press Ctrl+C to stop)"
 
-try {
-    if (-not $NoBrowser) {
-        # Open the browser once the server answers (up to 60 s: first start may migrate).
-        for ($i = 0; $i -lt 120; $i++) {
-            if ($server.HasExited) { throw "Traid stopped during startup (exit code $($server.ExitCode)). See data\logs." }
+if (-not $NoBrowser) {
+    # Open the browser once the server answers (the first start may migrate the database).
+    Start-Job -ArgumentList $url -ScriptBlock {
+        param($url)
+        for ($i = 0; $i -lt 240; $i++) {
             try {
                 Invoke-WebRequest -UseBasicParsing -TimeoutSec 2 "$url/api/v1/health" | Out-Null
                 Start-Process $url
-                break
+                return
             } catch {
                 Start-Sleep -Milliseconds 500
             }
         }
-    }
-    Wait-Process -Id $server.Id
+    } | Out-Null
+}
+
+# The server runs in this window, so closing it stops Traid.
+Push-Location $BackendDir
+try {
+    & $BackendPython -m app
+    if ($LASTEXITCODE -ne 0) { throw "Traid stopped with exit code $LASTEXITCODE. See data\logs." }
 } finally {
-    if ($server -and -not $server.HasExited) {
-        & taskkill /PID $server.Id /T /F | Out-Null
-    }
+    Pop-Location
+    Get-Job | Remove-Job -Force -ErrorAction SilentlyContinue
 }
