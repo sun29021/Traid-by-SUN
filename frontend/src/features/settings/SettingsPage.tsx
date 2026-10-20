@@ -184,6 +184,8 @@ function ExportTab() {
           'export.filename_pattern': values['export.filename_pattern'],
           'export.metadata_marker': values['export.metadata_marker'],
           'export.jpeg_quality_mode': values['export.jpeg_quality_mode'],
+          'export.default_author': String(values['export.default_author'] ?? '').trim(),
+          'export.default_copyright': String(values['export.default_copyright'] ?? '').trim(),
         });
       }}
     >
@@ -238,6 +240,20 @@ function ExportTab() {
         onChange={(e) => set('export.metadata_marker', e.target.checked)}
       />
       <p className={styles.muted}>Writes a note into the file's metadata (recommended).</p>
+      <TextField
+        label="Default author"
+        value={String(values['export.default_author'] ?? '')}
+        maxLength={300}
+        onChange={(e) => set('export.default_author', e.target.value)}
+        helper="Written into exported files; can be changed per export."
+      />
+      <TextField
+        label="Default copyright"
+        value={String(values['export.default_copyright'] ?? '')}
+        maxLength={300}
+        placeholder="© 2026 Your Name"
+        onChange={(e) => set('export.default_copyright', e.target.value)}
+      />
       {save.isError && <Banner tone="danger" title={messageFor(save.error)} />}
       <div className={styles.row}>
         <Button type="submit" variant="primary" loading={save.isPending} disabled={!draft}>

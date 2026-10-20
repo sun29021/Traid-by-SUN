@@ -252,7 +252,7 @@ Triggers: `BEFORE UPDATE` and `BEFORE DELETE` on `audit_events` → `RAISE(ABORT
 ### 3.12 `app_settings`
 | Column | Type | Null | Notes |
 |--------|------|------|-------|
-| key | TEXT | no | PK; closed list: `export.default_format`, `export.filename_pattern`, `export.metadata_marker`, `export.jpeg_quality_mode`, `storage.backup_retention` |
+| key | TEXT | no | PK; closed list: `export.default_format`, `export.filename_pattern`, `export.metadata_marker`, `export.jpeg_quality_mode`, `storage.backup_retention`, `export.default_author`, `export.default_copyright` |
 | value | TEXT (JSON) | no | Validated per key |
 | updated_by | TEXT | yes | FK → users.id ON DELETE SET NULL |
 | updated_at | TIMESTAMP | no | |

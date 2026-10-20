@@ -1135,6 +1135,25 @@ export interface components {
             /** Ready */
             ready: boolean;
         };
+        /**
+         * ExportMetadata
+         * @description Descriptive metadata for the exported file. Capture data (camera, date taken,
+         *     location, serial numbers) is deliberately not offered (engine/metadata.py).
+         */
+        ExportMetadata: {
+            /** Author */
+            author?: string | null;
+            /** Comment */
+            comment?: string | null;
+            /** Copyright */
+            copyright?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Keywords */
+            keywords?: string[] | null;
+            /** Title */
+            title?: string | null;
+        };
         /** ExportOut */
         ExportOut: {
             /** Download Name */
@@ -1147,6 +1166,7 @@ export interface components {
             filename_pattern?: string | null;
             /** Format */
             format?: ("original" | "jpeg" | "png" | "tiff") | null;
+            metadata?: components["schemas"]["ExportMetadata"] | null;
         };
         /** FileRef */
         FileRef: {

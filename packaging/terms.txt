@@ -1,0 +1,27 @@
+Traid — designed & developed by Xavier Sun
+==========================================
+
+Traid replaces short text in photos (labels, serial numbers, painted or engraved
+lettering) using real characters learned from your own reference photos. Everything
+runs on this computer: no account, no cloud, no telemetry.
+
+Acceptable use
+--------------
+By installing Traid you agree to:
+
+  * Edit only images that you own or are authorised to change.
+  * Not use Traid to forge or alter documents, IDs, money, certificates, receipts
+    or records, or to deceive anyone about what an image shows.
+  * Keep exported files honest: Traid marks exports as edited by default and never
+    writes camera, date-taken or location data into edited images.
+
+Software
+--------
+Traid uses open-source components, including PP-OCRv4 (PaddleOCR, Apache-2.0),
+LaMa inpainting (Apache-2.0), ONNX Runtime (MIT), OpenCV (Apache-2.0), Pillow,
+NumPy, FastAPI, SQLAlchemy, React and pywebview. Their licences apply to them.
+
+Your data is stored in %LOCALAPPDATA%\Traid and is kept when Traid is uninstalled,
+so a reinstall finds your profiles again. Delete that folder to remove it.
+
+Traid is provided "as is", without warranty of any kind.

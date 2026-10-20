@@ -24,9 +24,10 @@ from app.db.models import EditJob
 from app.db.models.enums import FileKind, JobStatus, MimeType
 from app.db.transaction import transaction
 from app.engine.io import decode_image, encode_image
+from app.engine.metadata import ImageDetails
 from app.engine.types import DecodedImage, ImageFormat
 from app.repositories import files as files_repo
-from app.schemas.jobs import ExportOut, ExportRequest
+from app.schemas.jobs import ExportMetadata, ExportOut, ExportRequest
 from app.services import app_settings, audit
 from app.services.audit import AuditAction
 from app.services.files import store_generated_file
@@ -66,6 +67,38 @@ def download_name(
     return _safe(name, "traid_export") + _EXTENSION[fmt]
 
 
+def _clean(value: str | None, *, multiline: bool = False) -> str:
+    """Trim and drop control characters (newlines kept only in long text)."""
+    text = (value or "").strip()
+    allowed = {"\n"} if multiline else set()
+    return "".join(c for c in text if c.isprintable() or c in allowed)
+
+
+def image_details(session: Session, metadata: ExportMetadata | None) -> ImageDetails:
+    """The request's fields; author and copyright fall back to the saved defaults
+    (None = use the default, "" = leave empty)."""
+    m = metadata or ExportMetadata()
+    author = (
+        m.author
+        if m.author is not None
+        else str(app_settings.get(session, "export.default_author"))
+    )
+    copyright_text = (
+        m.copyright
+        if m.copyright is not None
+        else str(app_settings.get(session, "export.default_copyright"))
+    )
+    keywords = tuple(dict.fromkeys(k for k in (_clean(k) for k in m.keywords or []) if k))
+    return ImageDetails(
+        title=_clean(m.title),
+        description=_clean(m.description, multiline=True),
+        author=_clean(author),
+        copyright=_clean(copyright_text),
+        keywords=keywords,
+        comment=_clean(m.comment, multiline=True),
+    )
+
+
 def jpeg_quality(mode: str) -> int | None:
     """`match_source` → None (source tables); `fixed:<60-100>` → that quality."""
     if mode.startswith("fixed:"):
@@ -92,6 +125,7 @@ def encode_export(
     *,
     format_choice: str | None = None,
     filename_pattern: str | None = None,
+    metadata: ExportMetadata | None = None,
 ) -> EncodedExport:
     """The accepted job's result encoded like its input (shared by single and ZIP export)."""
     if job.status != JobStatus.ACCEPTED.value:
@@ -115,7 +149,10 @@ def encode_export(
         if app_settings.get(session, "export.metadata_marker")
         else None
     )
-    data = encode_image(rendered, decoded, fmt=fmt, jpeg_quality=quality, marker=marker)
+    details = image_details(session, metadata)
+    data = encode_image(
+        rendered, decoded, fmt=fmt, jpeg_quality=quality, marker=marker, details=details
+    )
     pattern = filename_pattern or str(app_settings.get(session, "export.filename_pattern"))
     name = download_name(pattern, template=source.original_name, token=job.new_text, fmt=fmt)
     return EncodedExport(data, name, fmt, decoded, quality, marker is not None)
@@ -127,7 +164,12 @@ def export_job(
     with transaction(session):
         job = get_owned(session, owner_id, job_id)
         out = encode_export(
-            session, store, job, format_choice=body.format, filename_pattern=body.filename_pattern
+            session,
+            store,
+            job,
+            format_choice=body.format,
+            filename_pattern=body.filename_pattern,
+            metadata=body.metadata,
         )
         stored = store_generated_file(
             session,

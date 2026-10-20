@@ -36,3 +36,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Desktop app build output (scripts/build-installer.ps1)
+build/

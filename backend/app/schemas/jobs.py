@@ -110,11 +110,29 @@ class RejectRequest(ApiModel):
     reason: Annotated[str, StringConstraints(max_length=300)] | None = None
 
 
+ShortText = Annotated[str, StringConstraints(max_length=300)]
+LongText = Annotated[str, StringConstraints(max_length=2000)]
+Keyword = Annotated[str, StringConstraints(min_length=1, max_length=64)]
+
+
+class ExportMetadata(ApiModel):
+    """Descriptive metadata for the exported file. Capture data (camera, date taken,
+    location, serial numbers) is deliberately not offered (engine/metadata.py)."""
+
+    title: ShortText | None = None
+    description: LongText | None = None
+    author: ShortText | None = None
+    copyright: ShortText | None = None
+    keywords: Annotated[list[Keyword], Field(max_length=30)] | None = None
+    comment: LongText | None = None
+
+
 class ExportRequest(ApiModel):
     format: Literal["original", "jpeg", "png", "tiff"] | None = None
     filename_pattern: (
         Annotated[str, StringConstraints(max_length=120, pattern=r"^[A-Za-z0-9_{}.\-]+$")] | None
     ) = None
+    metadata: ExportMetadata | None = None
 
 
 class ExportOut(ApiModel):

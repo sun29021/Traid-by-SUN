@@ -4,15 +4,7 @@ import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { useBlocker, useNavigate, useParams } from 'react-router-dom';
 
 import { Badge, Banner, Button, Dialog, IconButton, Skeleton, useToast } from '@/components';
-import {
-  acceptJob,
-  exportJob,
-  getJob,
-  rejectJob,
-  renderJob,
-  reopenJob,
-  setRegion,
-} from '@/lib/api/jobs';
+import { acceptJob, getJob, rejectJob, renderJob, reopenJob, setRegion } from '@/lib/api/jobs';
 import { getProfile } from '@/lib/api/profiles';
 import { queryKeys } from '@/lib/api/queryKeys';
 import type { EditJob, JobStatus, Quad, RegionUpdate, RenderParams } from '@/lib/api/types';
@@ -21,6 +13,7 @@ import { useTask } from '@/lib/hooks/useTask';
 import styles from './Editor.module.css';
 import { EditorCanvas } from './EditorCanvas';
 import { editorReducer, initialEditorState } from './editorStore';
+import { ExportDialog } from './ExportDialog';
 import { messageFor } from './errors';
 import { Inspector, TOKEN_INPUT_ID } from './Inspector';
 import { NewJob } from './NewJob';
@@ -144,21 +137,7 @@ function JobEditor({ jobId }: { jobId: string }) {
     onError: (e) => setError(messageFor(e)),
   });
 
-  const exporter = useMutation({
-    mutationFn: () => exportJob(jobId),
-    onSuccess: (result) => {
-      const url = `${result.file.url}?download=1`;
-      setExported({ url, name: result.download_name });
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = result.download_name;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      refresh();
-    },
-    onError: (e) => setError(messageFor(e)),
-  });
+  const [exporting, setExporting] = useState(false);
 
   const reopen = useMutation({
     mutationFn: () => reopenJob(jobId),
@@ -166,7 +145,7 @@ function JobEditor({ jobId }: { jobId: string }) {
     onError: (e) => setError(messageFor(e)),
   });
 
-  const busy = render.isPending || decide.isPending || exporter.isPending || region.isPending;
+  const busy = render.isPending || decide.isPending || region.isPending;
 
   const generate = useCallback(() => {
     if (!job || job.status === 'accepted' || !newText) return;
@@ -201,7 +180,7 @@ function JobEditor({ jobId }: { jobId: string }) {
     generate,
     accept: () => job?.status === 'rendered' && decide.mutate('accept'),
     reject: () => job?.status === 'rendered' && setRejecting(true),
-    exportFile: () => job?.status === 'accepted' && exporter.mutate(),
+    exportFile: () => job?.status === 'accepted' && setExporting(true),
     focusToken: () => document.getElementById(TOKEN_INPUT_ID)?.focus(),
     toggleRegionsPanel: () => setShowRegions((v) => !v),
     toggleInspector: () => setShowInspector((v) => !v),
@@ -344,7 +323,7 @@ function JobEditor({ jobId }: { jobId: string }) {
             onGenerate={generate}
             onAccept={() => decide.mutate('accept')}
             onReject={() => setRejecting(true)}
-            onExport={() => exporter.mutate()}
+            onExport={() => setExporting(true)}
             onReopen={() => reopen.mutate()}
             onFixOldText={(text) =>
               region.mutate(
@@ -368,6 +347,17 @@ function JobEditor({ jobId }: { jobId: string }) {
           onClick={() => setShowInspector(true)}
         />
       )}
+
+      <ExportDialog
+        open={exporting}
+        jobId={jobId}
+        suggestedTitle={job.new_text ?? undefined}
+        onClose={() => setExporting(false)}
+        onExported={(result) => {
+          setExported({ url: `${result.file.url}?download=1`, name: result.download_name });
+          refresh();
+        }}
+      />
 
       <Dialog
         open={rejecting}

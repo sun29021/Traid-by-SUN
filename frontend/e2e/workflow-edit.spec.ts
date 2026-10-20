@@ -104,9 +104,22 @@ test('drop a photo, generate a new token, accept and export', async ({ page, req
   // 4. Accept. 5. Export.
   await page.getByRole('button', { name: 'Accept' }).click();
   await expect(page.getByText('Result accepted')).toBeVisible();
+  await page.getByRole('button', { name: 'Export', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Export' });
+  await expect(dialog.getByLabel('Title')).toHaveValue('A7-204931');
+  await dialog.getByRole('textbox', { name: 'Author' }).fill('Xavier Sun');
+  await dialog.getByLabel('Keywords').fill('traid, showcase');
+  expect(
+    (await new AxeBuilder({ page }).analyze()).violations.filter(
+      (v) => v.impact === 'serious' || v.impact === 'critical',
+    ),
+  ).toEqual([]);
   const download = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'Export' }).click();
-  expect((await download).suggestedFilename()).toBe('target-1_A7-204931.jpg');
+  await dialog.getByRole('button', { name: 'Export file' }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe('target-1_A7-204931.jpg');
+  const bytes = readFileSync(await file.path());
+  expect(bytes.includes(Buffer.from('Xavier Sun'))).toBe(true); // author in EXIF/XMP
 
   // The job shows up on Home.
   await page.goto('/');

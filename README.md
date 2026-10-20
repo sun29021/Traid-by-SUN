@@ -62,7 +62,17 @@ After changing any backend endpoint or schema, regenerate the frontend API types
 powershell -ExecutionPolicy Bypass -File scripts\gen-api-types.ps1
 ```
 
-## Run Traid (everyday use)
+## Install Traid as a desktop app
+
+`build\Traid-Setup-0.1.0.exe` installs Traid like any Windows program: its own window (no browser), Start-menu and Desktop shortcuts, an uninstaller in Settings → Apps. No administrator rights, Python or other tools are needed on the target PC (Windows 10/11 with Edge WebView2, which Windows 11 includes). Data is kept per user in `%LOCALAPPDATA%\Traid` and survives uninstalling. The installer is not code-signed, so Windows SmartScreen may show "Windows protected your PC": choose *More info → Run anyway*.
+
+Build a new installer after changing the code (needs NSIS: `winget install NSIS.NSIS`):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1
+```
+
+## Run Traid from the source folder
 
 **Easiest:** double-click **Start Traid.cmd** in this folder (or the *Traid* shortcut on the Desktop). The first time it installs everything; after that it rebuilds the interface only when the code changed, starts Traid and opens the browser. Close the window to stop Traid.
 

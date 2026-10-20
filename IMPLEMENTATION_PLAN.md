@@ -272,6 +272,11 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 ---
 
+## Additions after Phase 15 (owner requests, 2026-10-20)
+
+- **Export metadata:** Export dialog (Editor and History) with title, description, author, copyright, keywords and comment; saved default author/copyright in Settings. Written as EXIF (ASCII) + Windows XP fields + XMP (exact Unicode) for JPEG/TIFF and iTXt for PNG (`engine/metadata.py`). Camera, date-taken, GPS and serial-number fields are deliberately not offered (acceptable use: an edited photo must not be made to pass as an untouched original); tests assert they are never written.
+- **Desktop app:** `app/desktop.py` (pywebview/WebView2 window, engine thread on a free loopback port, data in `%LOCALAPPDATA%\Traid`, single instance, browser fallback), `packaging/` (PyInstaller spec, icon, version info, NSIS per-user installer with terms page), `scripts/build-installer.ps1`. Verified on the owner's PC: silent install, Start-menu/Desktop shortcuts, Apps entry, GPU (DirectML) and all models found in the bundle, a full train → detect → render → export run through the bundled app, single instance, clean shutdown on window close. Installer ≈ 170 MB (unsigned).
+
 ## Dependency order
 
 ```

@@ -493,3 +493,51 @@ def test_rejections_push_a_glyph_down_the_ranking(studio: Studio) -> None:
     if len(later) > 1:
         assert later[0]["glyph_id"] != top
     assert next(v for v in later if v["glyph_id"] == top)["score"] < first[0]["score"]
+
+
+def test_export_writes_descriptive_metadata_with_saved_defaults(studio: Studio) -> None:
+    profile = _ready_profile(studio)
+    job = _rendered(studio, profile["id"])
+    studio.client.post(f"/api/v1/jobs/{job['id']}/accept")
+    saved = studio.client.patch(
+        "/api/v1/settings",
+        json={
+            "export.default_author": "Xavier Sun",
+            "export.default_copyright": "© 2026 Xavier Sun",
+        },
+    )
+    assert saved.status_code == 200, saved.text
+
+    response = studio.client.post(
+        f"/api/v1/jobs/{job['id']}/export",
+        json={
+            "format": "jpeg",
+            "metadata": {
+                "title": "Receipt mock-up",
+                "description": "Edited from receipt.png",
+                "keywords": ["traid", " receipt ", "traid"],
+            },
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    data = _download(studio, response.json()["data"]["file"]["url"])
+    with Image.open(io.BytesIO(data)) as image:
+        exif = image.getexif()
+        xmp = image.info["xmp"].decode("utf-8")
+    assert exif[315] == "Xavier Sun"  # default author applied
+    assert exif[33432] == "(c) 2026 Xavier Sun"
+    assert exif[270] == "Edited from receipt.png"
+    assert "© 2026 Xavier Sun" in xmp and xmp.count("<rdf:li>traid</rdf:li>") == 1
+    assert not set(exif) & {271, 272, 306, 0x8769, 0x8825}  # never camera, date or GPS
+
+    # An explicit empty author overrides the default; unknown fields are rejected.
+    empty = studio.client.post(
+        f"/api/v1/jobs/{job['id']}/export", json={"format": "jpeg", "metadata": {"author": ""}}
+    )
+    with Image.open(io.BytesIO(_download(studio, empty.json()["data"]["file"]["url"]))) as image:
+        assert 315 not in image.getexif()
+    spoof = studio.client.post(
+        f"/api/v1/jobs/{job['id']}/export", json={"metadata": {"camera_model": "Canon EOS"}}
+    )
+    assert spoof.status_code == 422

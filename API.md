@@ -188,7 +188,7 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 | GET | `/jobs/{id}/glyph-variants?position=n` | Alternatives for one character (Should) | Top 6 glyphs with similarity scores. |
 | POST | `/jobs/{id}/accept` | Accept | Only from `rendered`. Applies learning update + audit in one transaction. Idempotent on `accepted`. |
 | POST | `/jobs/{id}/reject` | Reject | `{ reason? (≤ 300) }`. From `rendered`. Updates glyph reject counts. |
-| POST | `/jobs/{id}/export` | Produce export file | `{ format?: "original"|"jpeg"|"png"|"tiff", filename_pattern? }`. Only `accepted`. Sync (fast) → `201` `{ file: FileRef, download_name }`. Format, size, DPI and ICC from the input; JPEG with the source's quantisation tables (or `export.jpeg_quality_mode`); edit marker (JPEG comment / PNG `Software` / TIFF Software tag) unless `export.metadata_marker` is false. Audit `job.exported`. |
+| POST | `/jobs/{id}/export` | Produce export file | `{ format?: "original"|"jpeg"|"png"|"tiff", filename_pattern?, metadata?: { title?, description?, author?, copyright?, keywords?: [≤ 30], comment? } }`. Metadata is descriptive only (EXIF ImageDescription/Artist/Copyright + Windows XP fields + XMP Dublin Core for JPEG/TIFF; PNG iTXt). `author`/`copyright` omitted → the saved defaults; `""` → none. Camera make/model, date taken, GPS and serial numbers are never written (unknown keys → 422). Only `accepted`. Sync (fast) → `201` `{ file: FileRef, download_name }`. Format, size, DPI and ICC from the input; JPEG with the source's quantisation tables (or `export.jpeg_quality_mode`); edit marker (JPEG comment / PNG `Software` / TIFF Software tag) unless `export.metadata_marker` is false. Audit `job.exported`. |
 | POST | `/jobs/{id}/reopen` | Copy into a new editable job (same input, region, params) | `201` EditJob. |
 | DELETE | `/jobs/{id}` | Delete job | Not allowed for batch items of running batches (`409`). `204`. Audit `job.deleted`. |
 
@@ -224,7 +224,7 @@ Batch item review uses the normal `/jobs/{id}` endpoints.
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
 | GET | `/settings` | All settings with defaults applied | |
-| PATCH | `/settings` | Update | Keys: `export.default_format` (`original|jpeg|png|tiff`), `export.filename_pattern` (tokens `{template}`, `{token}`, `{date}`, `{n}`; ≤ 120 chars; only `[A-Za-z0-9_{}.-]`), `export.metadata_marker` (bool), `export.jpeg_quality_mode` (`match_source|fixed:<60–100>`), `storage.backup_retention` (1–50). Audit `settings.updated`. |
+| PATCH | `/settings` | Update | Keys: `export.default_format` (`original|jpeg|png|tiff`), `export.filename_pattern` (tokens `{template}`, `{token}`, `{date}`, `{n}`; ≤ 120 chars; only `[A-Za-z0-9_{}.-]`), `export.metadata_marker` (bool), `export.jpeg_quality_mode` (`match_source|fixed:<60–100>`), `storage.backup_retention` (1–50), `export.default_author`, `export.default_copyright` (≤ 300 printable chars). Audit `settings.updated`. |
 | GET | `/audit` | Audit log | Filters: `action` (csv), `subject_id`, `from`, `to`. Cursor-paginated. Read-only. |
 
 ---

@@ -6,6 +6,7 @@ Traid needs no secrets; every setting has a safe default.
 
 from __future__ import annotations
 
+import sys
 from enum import StrEnum
 from functools import lru_cache
 from pathlib import Path
@@ -15,6 +16,10 @@ from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
+# In the installed desktop app (PyInstaller bundle) the UI, models and migrations live in
+# the bundle folder instead of the repository.
+FROZEN = bool(getattr(sys, "frozen", False))
+BUNDLE_ROOT = Path(getattr(sys, "_MEIPASS", REPO_ROOT)) if FROZEN else REPO_ROOT
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 
 
@@ -71,7 +76,7 @@ class Settings(BaseSettings):
 
     @property
     def frontend_dist_dir(self) -> Path:
-        return REPO_ROOT / "frontend" / "dist"
+        return BUNDLE_ROOT / "frontend" / "dist"
 
 
 @lru_cache(maxsize=1)

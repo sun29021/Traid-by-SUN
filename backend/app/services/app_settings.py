@@ -19,6 +19,8 @@ DEFAULTS: dict[str, Any] = {
     "export.metadata_marker": True,
     "export.jpeg_quality_mode": "match_source",
     "storage.backup_retention": 10,
+    "export.default_author": "",
+    "export.default_copyright": "",
 }
 
 _PATTERN = re.compile(r"^[A-Za-z0-9_{}.\-]{1,120}$")
@@ -53,6 +55,9 @@ def _validate(key: str, value: Any) -> Any:
             raise ValidationFailed(
                 "Unknown token in the pattern: {" + sorted(unknown)[0] + "}", details={"key": key}
             )
+    elif key in ("export.default_author", "export.default_copyright"):
+        if not isinstance(value, str) or len(value) > 300 or not value.isprintable():
+            raise ValidationFailed("Use up to 300 printable characters", details={"key": key})
     elif key == "export.metadata_marker":
         if not isinstance(value, bool):
             raise ValidationFailed("Must be true or false", details={"key": key})

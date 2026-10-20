@@ -21,7 +21,8 @@ import {
 } from '@/components';
 import { messageFor } from '@/features/editor/errors';
 import { auditLabel } from '@/features/settings/auditLabels';
-import { deleteJob, exportJob, getJob, type JobFilters, listJobs, reopenJob } from '@/lib/api/jobs';
+import { ExportDialog } from '@/features/editor/ExportDialog';
+import { deleteJob, getJob, type JobFilters, listJobs, reopenJob } from '@/lib/api/jobs';
 import { listProfiles } from '@/lib/api/profiles';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { listAudit } from '@/lib/api/system';
@@ -226,19 +227,7 @@ function JobDetail({ jobId }: { jobId: string }) {
     queryFn: ({ signal }) => listAudit({ subjectId: jobId, limit: 50 }, signal),
   });
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const exporter = useMutation({
-    mutationFn: () => exportJob(jobId),
-    onSuccess: (result) => {
-      const link = document.createElement('a');
-      link.href = `${result.file.url}?download=1`;
-      link.download = result.download_name;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      void queryClient.invalidateQueries({ queryKey: queryKeys.job(jobId) });
-    },
-    onError: (error) => toast({ tone: 'danger', message: messageFor(error) }),
-  });
+  const [exporting, setExporting] = useState(false);
   const reopen = useMutation({
     mutationFn: () => reopenJob(jobId),
     onSuccess: (copy) => navigate(`/editor/${copy.id}`),
@@ -275,11 +264,7 @@ function JobDetail({ jobId }: { jobId: string }) {
         <Badge {...STATUS[data.status]} />
         <div className={styles.actions}>
           {data.status === 'accepted' && (
-            <Button
-              variant="primary"
-              onClick={() => exporter.mutate()}
-              loading={exporter.isPending}
-            >
+            <Button variant="primary" onClick={() => setExporting(true)}>
               Export again
             </Button>
           )}
@@ -358,6 +343,14 @@ function JobDetail({ jobId }: { jobId: string }) {
           </ul>
         </section>
       </div>
+
+      <ExportDialog
+        open={exporting}
+        jobId={jobId}
+        suggestedTitle={data.new_text ?? undefined}
+        onClose={() => setExporting(false)}
+        onExported={() => void queryClient.invalidateQueries({ queryKey: queryKeys.job(jobId) })}
+      />
 
       <Dialog
         open={confirmDelete}

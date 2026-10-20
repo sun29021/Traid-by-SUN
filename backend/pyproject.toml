@@ -21,6 +21,10 @@ dependencies = [
 ]
 
 [dependency-groups]
+desktop = [
+    "pyinstaller>=6.22.3",
+    "pywebview>=6.2.1",
+]
 dev = [
     "pytest",
     "httpx",
@@ -63,6 +67,11 @@ plugins = ["pydantic.mypy"]
 [[tool.mypy.overrides]]
 # onnxruntime ships no type information.
 module = ["onnxruntime", "onnxruntime.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# pywebview (desktop window) ships no type information.
+module = ["webview", "webview.*"]
 ignore_missing_imports = true
 
 [tool.pydantic-mypy]
