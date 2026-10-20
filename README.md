@@ -64,6 +64,10 @@ powershell -ExecutionPolicy Bypass -File scripts\gen-api-types.ps1
 
 ## Run Traid (everyday use)
 
+**Easiest:** double-click **Start Traid.cmd** in this folder (or the *Traid* shortcut on the Desktop). The first time it installs everything; after that it rebuilds the interface only when the code changed, starts Traid and opens the browser. Close the window to stop Traid.
+
+The same from a terminal:
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\start.ps1
 ```
