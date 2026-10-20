@@ -146,6 +146,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** pixels outside mask bit-identical; residual-text check (OCR finds no text in removed area) on fixtures; fallback path.
 - **Done when:** fixtures show removed tokens with no ghosting at 100% zoom (visual check) and tests pass.
+- **Status (2026-10-20): DONE.** `engine/inpaint.py` hybrid remover: Telea fill + per-channel grain top-up on plain surfaces, LaMa (OpenCV Zoo ONNX, CPU only) when long edges cross into the mask, feathered blend with outside pixels bit-identical. Fixture generator can render the same scene without ink (`blank`) and with a crossing rule line (`rule`), giving true backgrounds. Measured (ARCHITECTURE §10.1): plain structure error 1.0–1.8, texture ratio 0.81–0.89; with a crossing line LaMa 0.7–1.6 vs Telea 3.5–8.9. OCR finds no text after removal on all four surfaces. `fetch_models.py` gained `url` sources; `ModelSpec.cpu_only`. 246 backend tests.
 
 ## Phase 8 — Engine III: synthesis, harmonization, verification
 

@@ -70,6 +70,14 @@ def main() -> None:
                 continue
 
             source = model["source"]
+            if source["type"] == "url":  # the download is the model file itself
+                staged = Path(tmp) / model["file"]
+                download(source["url"], staged, source["sha256"])
+                if source["sha256"] != model["sha256"]:
+                    raise SystemExit(f"Manifest hashes disagree for {model['name']}")
+                shutil.move(str(staged), target)
+                print(f"install {model['name']} -> {target}")
+                continue
             if source["type"] != "pypi-wheel":
                 raise SystemExit(f"Unknown source type {source['type']!r} for {model['name']}")
             archive = downloads.get(source["url"])

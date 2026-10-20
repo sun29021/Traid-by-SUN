@@ -42,7 +42,7 @@
 | **NumPy**, **OpenCV** (`opencv-python-headless`), **Pillow** | latest stable | Geometry, binarization, morphology, classical inpainting, Poisson blending, image IO incl. ICC/DPI. |
 | **ONNX Runtime** (`onnxruntime-directml` on Windows, which also includes the CPU provider; `onnxruntime` elsewhere — chosen by platform markers in `pyproject.toml`) | latest stable | One inference runtime for all models, no PyTorch needed in MVP, works on any Windows GPU via DirectML. |
 | **PP-OCRv4 models, own pipeline** (`engine/detect.py`) | models pinned in `models/manifest.json` | Decision 2026-10-20: RapidOCR was dropped. `rapidocr` 3.x downloads models at runtime from ModelScope (breaks "no runtime network"), and `rapidocr-onnxruntime` hard-requires CPU `onnxruntime` + full `opencv-python`, which conflict with `onnxruntime-directml` and the headless build. Traid runs the same PP-OCRv4 ONNX models with its own ~250-line DB/CTC pre- and post-processing: five fewer dependencies, GPU-compatible, and CTC gives per-character positions directly. The angle classifier is not used (tokens are assumed upright). |
-| **LaMa (big-lama) ONNX export** | pinned file | State-of-the-art free inpainting for removing text while keeping paper texture. |
+| **LaMa ONNX export** (OpenCV Zoo, 2025-01) | pinned file | Learned inpainting for text that sits on structured backgrounds (lines, borders, patterns). CPU only: DirectML cannot run its Fourier-convolution MatMul. |
 | **argon2-cffi** | latest stable | Password hashing (Argon2id). |
 | **uv** | latest stable | Fast, reproducible Python env + lock file. |
 | **pytest**, **httpx** | latest stable | Tests. |
@@ -99,7 +99,7 @@ engine/
   geometry.py       homography rectify / inverse warp
   segment.py        per-character boxes, baseline, cap height, pitch
   matte.py          background/ink estimate → soft alpha glyph masks
-  inpaint.py        removal mask + LaMa (fallback OpenCV Telea)
+  inpaint.py        removal mask; Telea + matched grain, LaMa for structured backgrounds
   glyph_select.py   choose glyph per character (same-image first, then bank)
   layout.py         slot reuse or alignment/spacing layout
   harmonize.py      illumination transfer, ink colour, blur match, grain match
@@ -263,7 +263,7 @@ When enabled, the design below applies on top of 7.1 without changing data owner
 | Rectify | Homography from quad (OpenCV) | — |
 | Segment characters | Strip = detected box padded by 25 % of its height. Ink map = absolute difference between the strip and a large median filter (Otsu threshold; one polarity for ink, both for relief). Components → column groups (horizontal overlap merges dots/accents), reconciled with the label count (merge fragments, split plausible touching pairs near the middle), mapped left to right. CTC positions only guide splits. Spaces are never inferred from gaps (measured unreliable) | — |
 | Soft mask | **Ink mode:** background estimate (inpainted) + ink colour estimate → alpha = clip((bg − I)/(bg − ink)) per channel-luminance. **Relief mode:** binary glyph mask from segmentation, dilated to include the stroke's highlight/shadow rim; the RGB patch itself is kept as the glyph texture. | — |
-| Remove | Dilated union of glyph alphas → LaMa inpainting; OpenCV Telea fallback | ✅ ONNX |
+| Remove | Dilated union of glyph alphas (3 px) on a crop with context. **Hybrid, chosen by measurement (see below):** OpenCV Telea fill on plain surfaces; LaMa when long edges run into the mask (a rule, border or pattern crossing the token). Every fill gets a per-channel grain top-up so its fine-noise σ matches the ring around it; feathered blend; pixels outside the feather are never changed | ✅ ONNX (LaMa) |
 | Select glyphs | Same-image glyphs first; else bank glyphs ranked by condition similarity (cap height, stroke width, blur σ, background luminance, contrast, angle) × learned acceptance score | Learned stats |
 | Layout | Slot reuse for equal length; else alignment + pitch/advances from profile | — |
 | Harmonize | Scale to cap height; **ink mode:** ink colour transfer + shading ratio from local background; **relief mode:** low-frequency illumination of the patch replaced by the target's local illumination (high-frequency material detail kept). Both: Gaussian blur to match estimated σ; additive grain matched to measured noise σ; inverse warp | — |
@@ -274,6 +274,18 @@ The mode comes from the profile's `surface_type` (PRD FR-E15): `print`, `paint` 
 | Verify | OCR read-back (same OCR model), seam gradient score, inside/outside statistics | ✅ ONNX |
 
 Determinism: all random operations (grain) use a seed stored on the job.
+
+**Text removal measurements** (Phase 7, fixtures rendered with and without ink so the true background is known; structure error = mean |low-pass difference| in grey levels inside the mask, texture ratio = fine-grain σ of the fill ÷ the true background's, 1.0 is ideal):
+
+| Background | Method | Structure error | Texture ratio | Time (CPU) |
+|------------|--------|-----------------|---------------|------------|
+| Plain (4 surfaces) | Telea alone | 1.24 | 0.39 (smooth smudge) | ~5 ms |
+| Plain | LaMa | 1.00 | 0.78 | ~8–10 s |
+| Plain | **Telea + grain** (chosen) | 1.03–1.76 | 0.81–0.89 | 0.1–0.2 s |
+| Line crossing the token | Telea + grain | 3.5–8.9 (line broken) | 0.70–0.76 | 0.1–0.2 s |
+| Line crossing the token | **LaMa + grain** (chosen) | 0.74–1.57 | 0.94–1.02 | ~10 s |
+
+Selection: the number of Canny edge components in a ring around the mask that touch the mask and are at least 0.6× the ring width long. Plain fixtures give 0, a crossing line gives 8–15; LaMa is used above 1.5. Edge *density* was tried first and failed (0.01 on both). If LaMa is missing the Telea path is used and `fallback_used` is reported (`INPAINT_FALLBACK_USED`). After removal, PP-OCR finds no text in the area on every surface.
 
 ### 10.2 "Learning" in MVP (honest definition)
 Traid learns by **curating and ranking real data** and **adapting defaults** — no neural-network training in MVP:
@@ -292,8 +304,9 @@ Traid learns by **curating and ranking real data** and **adapting defaults** —
 - `models/manifest.json`: name, version, file, sha256, license, source URL.
 - `engine/models.py` verifies checksum at first load, picks device: `TRAID_DEVICE=auto` → DirectML/CUDA if available, else CPU; records device in `/system/status`.
 - **Owner hardware (PRD D-09):** dual-GPU laptop (NVIDIA RTX 3050 Laptop 4 GB + AMD Radeon integrated). Use **`onnxruntime-directml`** (no CUDA toolkit/cuDNN install needed). DirectML adapter numbering does not always match Task Manager, so `TRAID_GPU_DEVICE_ID=auto` passes DirectML's `performance_preference=high_performance, device_filter=gpu`, which selects the discrete NVIDIA GPU; an explicit index (`0`, `1`, …) overrides it. Measured 2026-10-20 on the owner's laptop, PP-OCR detection at 960×960: RTX 3050 0.037 s, AMD iGPU 0.107 s, CPU 0.19 s; a full detect+read of a 960×640 photo: ~95 ms GPU, ~150 ms CPU. Settings → Engine shows the active device (DirectML does not expose the adapter name through ONNX Runtime).
-- Model files come from the pinned `rapidocr-onnxruntime 1.4.4` wheel on PyPI (immutable, Apache-2.0); `scripts/fetch_models.py` verifies the wheel's SHA-256 and each extracted model's SHA-256.
-- VRAM budget (4 GB): LaMa runs on a crop around the token (≤ 1024 px side) and OCR on a downscaled copy for detection, so peak VRAM stays well under 2 GB. If a GPU run fails with out-of-memory, the stage retries once on CPU and reports it in the quality report.
+- PP-OCR model files come from the pinned `rapidocr-onnxruntime 1.4.4` wheel on PyPI (immutable, Apache-2.0); `scripts/fetch_models.py` verifies the wheel's SHA-256 and each extracted model's SHA-256. LaMa comes from the OpenCV Zoo Hugging Face repo pinned to a commit, verified by SHA-256. LaMa is optional (`required: false`): without it removal falls back to Telea and says so.
+- Models marked `cpu_only` in the manifest never get a GPU session. LaMa is one: on DirectML its MatMul fails with "The parameter is incorrect" even with graph optimisations off (measured 2026-10-20).
+- VRAM budget (4 GB): LaMa runs on the CPU at 512×512 on a crop around the token, and OCR on a downscaled copy for detection, so peak VRAM stays well under 2 GB. If a GPU run fails with out-of-memory, the stage retries once on CPU and reports it in the quality report.
 - Performance targets are measured on AC power; on battery Windows throttles the dGPU and Traid may pick the integrated GPU.
 
 ---

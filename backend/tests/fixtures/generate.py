@@ -178,12 +178,25 @@ def make_token_image(
     blur_sigma: float | None = None,
     noise_sigma: float | None = None,
     jpeg_quality: int | None = None,
+    blank: bool = False,
+    rule: bool = False,
 ) -> TokenFixture:
-    """Render `text` on `surface`, place it in perspective on a canvas, degrade it."""
+    """Render `text` on `surface`, place it in perspective on a canvas, degrade it.
+
+    `blank=True` renders the identical scene (same random draws for texture, lighting,
+    blur and noise) without ink: the ground truth for text removal.
+    `rule=True` prints a horizontal line through the text (part of the surface, so it
+    stays in the blank version): structure that text removal must continue.
+    """
     rng = np.random.default_rng(seed)
     margin = font_px
     mask, (x0, y0, x1, y1), char_boxes = _render_text_mask(text, font_px, margin)
+    if blank:
+        mask = np.zeros_like(mask)
     plane, background, light_deg = _apply_surface(rng, surface, mask)
+    if rule:
+        middle = (y0 + y1) // 2
+        plane[middle - 2 : middle + 2, :] *= 0.35
     ph, pw = mask.shape
 
     cw, ch = canvas

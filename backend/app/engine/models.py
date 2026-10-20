@@ -47,6 +47,7 @@ class ModelSpec:
     sha256: str
     license: str
     required: bool
+    cpu_only: bool = False  # e.g. ops the GPU provider cannot run
 
 
 @dataclass(frozen=True)
@@ -178,6 +179,7 @@ class ModelRegistry:
                     sha256=m["sha256"],
                     license=m["license"],
                     required=bool(m.get("required", True)),
+                    cpu_only=bool(m.get("cpu_only", False)),
                 )
                 for m in data.get("models", [])
             ]
@@ -229,7 +231,7 @@ class ModelRegistry:
                     f"Model '{name}' is missing or damaged; run scripts/fetch_models.py"
                 )
             path = self._path(spec)
-            device = resolve_device(self.device_preference)
+            device = "cpu" if spec.cpu_only else resolve_device(self.device_preference)
             options = gpu_options(device, self.gpu_device_id)
             try:
                 raw = _create_session(path, device, options)

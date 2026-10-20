@@ -30,7 +30,7 @@ Traid replaces a short printed token in a photo or scan with a new value so that
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
-This creates `backend\.venv` (Python 3.11), installs `frontend\node_modules`, and downloads the AI models (about 15 MB, checksum-verified) into `models\`. To fetch models again later: `backend\.venv\Scripts\python.exe -I scripts\fetch_models.py`. Copy `.env.example` to `.env` only if you want to change defaults. Traid needs no API keys or secrets.
+This creates `backend\.venv` (Python 3.11), installs `frontend\node_modules`, and downloads the AI models (about 108 MB, checksum-verified) into `models\`. To fetch models again later: `backend\.venv\Scripts\python.exe -I scripts\fetch_models.py`. Copy `.env.example` to `.env` only if you want to change defaults. Traid needs no API keys or secrets.
 
 ## Develop
 

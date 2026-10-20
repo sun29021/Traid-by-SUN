@@ -138,7 +138,8 @@ def test_system_status_lists_installed_models(settings: Settings) -> None:
         engine = client.get("/api/v1/system/status").json()["data"]["engine"]
 
     names = {m["name"] for m in engine["models"]}
-    assert names == {"ppocr-det", "ppocr-rec"}
+    assert names == {"ppocr-det", "ppocr-rec", "lama-inpaint"}
     if not engine["ready"]:
         pytest.skip("OCR models not installed")
-    assert all(m["present"] and m["checksum_ok"] and not m["loaded"] for m in engine["models"])
+    ocr = [m for m in engine["models"] if m["name"].startswith("ppocr")]
+    assert all(m["present"] and m["checksum_ok"] and not m["loaded"] for m in ocr)

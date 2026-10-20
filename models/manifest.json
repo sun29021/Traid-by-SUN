@@ -32,6 +32,23 @@
         "sha256": "971d7d5f223a7a808662229df1ef69893809d8457d834e6373d3854bc1782cbf",
         "member": "rapidocr_onnxruntime/models/ch_PP-OCRv4_rec_infer.onnx"
       }
+    },
+    {
+      "name": "lama-inpaint",
+      "role": "inpainting",
+      "version": "LaMa (OpenCV Zoo export, 2025-01)",
+      "file": "lama_inpaint_2025jan.onnx",
+      "sha256": "7df918ac3921d3daf0aae1d219776cf0dc4e4935f035af81841b40adcf74fdf2",
+      "size": 92591623,
+      "license": "Apache-2.0 (LaMa by advimman; ONNX by Carve, OpenCV Zoo)",
+      "required": false,
+      "source": {
+        "type": "url",
+        "url": "https://huggingface.co/opencv/inpainting_lama/resolve/aee6d22f0a13e5e35af1c9a1c3afd62841fc6f3f/inpainting_lama_2025jan.onnx",
+        "sha256": "7df918ac3921d3daf0aae1d219776cf0dc4e4935f035af81841b40adcf74fdf2"
+      },
+      "cpu_only": true,
+      "notes": "DirectML cannot run its Fourier-convolution MatMul (measured 2026-10-20); CPU ~8.3 s per 512x512."
     }
   ]
 }
