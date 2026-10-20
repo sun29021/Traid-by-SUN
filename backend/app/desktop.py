@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import contextlib
 import ctypes
+import faulthandler
 import os
 import socket
 import sys
@@ -84,12 +85,28 @@ def _prepare_environment(port: int) -> Path:
     base = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
     data_dir = Path(os.environ.get("TRAID_DATA_DIR") or base / APP_NAME)
     os.environ.setdefault("TRAID_ENV", "production")
+    # CPU by default: on the owner's dual-GPU laptop the NVIDIA DirectX driver crashed
+    # the whole app once during DirectML inference (access violation in nvwgf2umx.dll,
+    # 2026-10-20). Such faults cannot be caught in-process, and the GPU only saves
+    # ~0.5 s per photo here. Set TRAID_DEVICE=auto to use the GPU anyway.
+    os.environ.setdefault("TRAID_DEVICE", "cpu")
     os.environ["TRAID_DATA_DIR"] = str(data_dir)
     os.environ["TRAID_PORT"] = str(port)
     if FROZEN:
         os.environ["TRAID_MODEL_DIR"] = str(BUNDLE_ROOT / "models")
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
+
+
+def _enable_crash_log(data_dir: Path) -> None:
+    """Native crashes (e.g. in a driver) write all threads' stacks to logs\\crash.log."""
+    logs = data_dir / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    handle = (logs / "crash.log").open("a", encoding="utf-8")
+    handle.write(f"--- Traid started {time.strftime('%Y-%m-%d %H:%M:%S')} ---\n")
+    handle.flush()
+    _enable_crash_log.handle = handle  # type: ignore[attr-defined]
+    faulthandler.enable(file=handle, all_threads=True)
 
 
 def main() -> int:
@@ -103,6 +120,7 @@ def main() -> int:
 
     port = _free_port()
     data_dir = _prepare_environment(port)
+    _enable_crash_log(data_dir)
     url = f"http://127.0.0.1:{port}"
 
     import uvicorn
