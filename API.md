@@ -148,7 +148,7 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
 | GET | `/profiles` | List | Filters: `archived=false|true|all` (default false), `q` (name contains). Order `updated_at DESC`. |
-| POST | `/profiles` | Create | Body: `name` (req), `surface_type` (req: `print`/`paint`/`laser_mark`/`engraved`), `description`, `charset`, `token_pattern`, `pattern_strict`, `alignment`, `spacing_mode`, `ready_threshold`, `use_auto_glyphs`. `409` on duplicate name. `422 INVALID_PATTERN`. |
+| POST | `/profiles` | Create | Body: `name` (req), `surface_type` (req: `print`/`paint`/`laser_mark`/`engraved`), `description`, `charset`, `token_pattern`, `pattern_strict`, `alignment`, `spacing_mode`, `ready_threshold`, `use_auto_glyphs`. `409` on duplicate name. Invalid charset or pattern (unparseable, > 200 chars, or nested quantifiers such as `(a+)+`) → `422 VALIDATION_FAILED` with the field path (`charset` / `token_pattern`). Charset duplicates are removed. |
 | GET | `/profiles/{id}` | Detail | Includes `status`, `coverage`, `stats`. |
 | PATCH | `/profiles/{id}` | Update | Any create field. Archived profiles → `409 PROFILE_ARCHIVED` except unarchive. |
 | POST | `/profiles/{id}/archive` | Archive | Idempotent. |
@@ -160,16 +160,16 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 ### 3.4 Reference images
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
-| POST | `/profiles/{id}/references` | Upload 1–50 images | `multipart/form-data`, field `files[]`, optional `known_text[]` aligned by index. Response `202`: `{ data: { created: [ReferenceImage], skipped: [{ name, code: "DUPLICATE_FILE" }], rejected: [{ name, code }] , task: Task } }`. One `extract_glyphs` task per upload request. |
+| POST | `/profiles/{id}/references` | Upload 1–50 images | `multipart/form-data`, repeated field `files`, optional repeated `known_text` aligned by index. Response `202`: `{ data: { created: [ReferenceImage], skipped: [{ name, code: "DUPLICATE_FILE", message }], rejected: [{ name, code, message }], task: Task \| null } }`. One `extract_glyphs` task per upload request (none if nothing was created). Archived profile → `409 PROFILE_ARCHIVED`. |
 | GET | `/profiles/{id}/references` | List | Filters: `status`. Cursor-paginated. |
-| PATCH | `/references/{id}` | Set `known_text` | Triggers re-extraction task (`202`) if processed. |
+| PATCH | `/references/{id}` | Set `known_text` | `200` `{ reference, task }`; `task` is set when the image was already processed or failed (it is re-extracted with the known text). |
 | POST | `/references/{id}/reextract` | Re-run extraction | `202` Task. Replaces this reference's `auto` glyphs; keeps `confirmed`/`rejected` decisions. |
 | DELETE | `/references/{id}` | Remove reference | Cascades its glyphs. `204`. |
 
 ### 3.5 Glyphs
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
-| GET | `/profiles/{id}/glyphs` | List | Filters: `char` (exact), `status` (csv), `min_quality` (0–1), `source` (`reference`/`job`). Order: `char ASC, quality_score DESC`. Limit up to 200. |
+| GET | `/profiles/{id}/glyphs` | List | Filters: `char` (exact), `status` (csv), `min_quality` (0–1), `source` (`reference`/`job`). Order: `char ASC, quality_score DESC`. `limit` 1–200 (default 100); `cursor` is opaque (this ordering is not by time). The `source` filter arrives with job-harvested glyphs (Phase 11). |
 | PATCH | `/glyphs/{id}` | Update one | `{ status?, char? }`; `char` must be in charset. |
 | POST | `/profiles/{id}/glyphs/bulk` | Bulk update | `{ ids: [≤ 500], action: "confirm"|"reject"|"relabel", char? }` → `{ updated: n }`. |
 | GET | `/jobs/{id}/glyph-candidates` | Real characters from a job's original image offered for the bank (Should) | Only for accepted jobs. |
@@ -216,7 +216,7 @@ Batch item review uses the normal `/jobs/{id}` endpoints.
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
 | GET | `/files/{id}` | Download/view binary | Ownership checked. `Content-Type` from DB, `Content-Disposition: inline` (images) or `attachment` with sanitized name (exports, zips, backups; `?download=1` forces attachment). `Cache-Control: private, max-age=31536000, immutable`. |
-| GET | `/files/{id}/thumb?size=256|512` | Thumbnail (generated on first request, cached) | JPEG/PNG. |
+| GET | `/files/{id}/thumb?size=256|512` | Thumbnail, generated per request and cached by the browser (immutable) | JPEG, or PNG when the image has transparency. |
 
 ### 3.10 Settings & audit
 | Method | Path | Purpose | Notes |

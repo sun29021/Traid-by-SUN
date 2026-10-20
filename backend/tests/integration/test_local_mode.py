@@ -120,7 +120,7 @@ def test_acceptance_is_audited_once(client: TestClient, settings: Settings) -> N
 def test_system_status_is_available_before_acceptance(client: TestClient) -> None:
     data = client.get("/api/v1/system/status").json()["data"]
 
-    assert data["schema_revision"] == "0003_local_owner"
+    assert data["schema_revision"] == "0004_profiles_glyphs"
     assert data["worker"] == {"running": False, "queued": 0}
     assert data["storage"]["disk_total_bytes"] > 0
     # Test settings point at an empty model folder: engine reported, but not ready.

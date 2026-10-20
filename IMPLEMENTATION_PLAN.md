@@ -109,7 +109,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 | Task | Detail |
 |------|--------|
-| 5.1 | Migration `0003_profiles_references_glyphs`: `profiles`, `reference_images`, `glyphs`. |
+| 5.1 | Migration `0004_profiles_glyphs` (0003 became `0003_local_owner`): `profiles`, `reference_images`, `glyphs`. |
 | 5.2 | Profiles service + API (CRUD, archive, delete with confirm, derived status, coverage). Regex validation for `token_pattern`. |
 | 5.3 | `engine/segment.py` (char boxes, baseline, cap height, pitch; **recover spaces from ink gaps**, because PP-OCR rarely outputs them — CTC time steps are too coarse, measured in Phase 4) and `engine/matte.py` (ink mode: soft alpha; relief mode: rim-dilated mask + texture patch + lighting direction). Migration adds `profiles.surface_type` and `glyphs.light_dir_deg`. |
 | 5.4 | `extract_glyphs` task handler: detect → filter by charset → rectify → segment → matte → glyph rows + PNG crops; per-reference status/error; known-text alignment (S). |
@@ -117,6 +117,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** segmentation IoU > 0.8 on fixtures; matte alpha error small vs ground truth; coverage + Ready rule; status derivation; upload dedupe/rejections; bulk relabel validation; ownership 404s.
 - **Done when:** uploading fixture references produces reviewable glyphs and correct coverage via API.
+- **Status (2026-10-20): DONE.** `engine/segment.py` (ink map from a large median background; relief mode keeps highlights and shadows; components → column groups reconciled with the label count; touching characters split near the middle; narrow single strokes never split), `engine/matte.py` (ink: colour-line alpha against an inpainted background; relief: rim mask + light direction; metrics: stroke, blur, noise, ink colour, contrast, isolation, quality), `engine/extract.py`, migration `0004_profiles_glyphs`, profile/reference/glyph services and API, `GET /files/{id}` + thumbnails (from 9.4), `extract_glyphs` task. Measured on fixtures (true labels): character-box IoU median 0.90–0.91 for print/paint/laser with 0–1 bad lines of 24; engraved median 0.77 (rims are part of the glyph). **Decision:** spaces are not inferred from ink gaps — measured gap distributions of real spaces and narrow-glyph letter gaps overlap — they come from OCR, known text or the pattern. 230 backend tests.
 
 ## Phase 6 — Profile UI (training & review)
 
@@ -171,7 +172,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 | 9.1 | Migration `0004_edit_jobs`: `edit_jobs`, `edit_job_glyphs`. |
 | 9.2 | Jobs service with state machine; `POST /jobs` (+ detect task with candidate scoring `engine/candidates.py`), `PUT /region`, `POST /render` (sync validation + render task, cache reuse), accept/reject, reopen, delete. |
 | 9.3 | Export service: format/DPI/ICC preservation, JPEG quality match, metadata marker setting, filename pattern; audit. |
-| 9.4 | `GET /files/{id}` + thumbnails. |
+| 9.4 | ~~`GET /files/{id}` + thumbnails~~ — delivered early in Phase 5 (the glyph review UI needs them). |
 
 - **Tests:** full state machine incl. invalid transitions (409); render validation codes; render dedupe (existing task returned); export preserves properties; marker on/off; ownership 404s.
 - **Done when:** a job can go upload → detect → render → accept → export via API.

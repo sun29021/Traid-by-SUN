@@ -8,13 +8,46 @@ from sqlalchemy.orm import Session
 
 from app.core.config import Settings
 from app.db.models import StoredFile
-from app.db.models.enums import FileKind
+from app.db.models.enums import FileKind, MimeType
 from app.db.transaction import transaction
 from app.repositories import files as files_repo
 from app.storage.filestore import FileStore, sanitize_original_name, sha256_hex
 from app.storage.images import validate_image
 
 IMAGE_UPLOAD_KINDS = frozenset({FileKind.REFERENCE, FileKind.TARGET})
+
+
+def store_generated_png(
+    session: Session,
+    store: FileStore,
+    *,
+    owner_id: str,
+    data: bytes,
+    kind: FileKind,
+    width: int,
+    height: int,
+) -> StoredFile:
+    """Register a PNG produced by Traid itself (glyph crops, masks). Deduplicated by hash."""
+    digest = sha256_hex(data)
+    with transaction(session):
+        existing = files_repo.get_by_hash(session, owner_id, digest, kind)
+        if existing is not None:
+            return existing
+        storage_path = store.write(data, digest, MimeType.PNG)
+        return files_repo.add(
+            session,
+            StoredFile(
+                owner_id=owner_id,
+                sha256=digest,
+                kind=kind.value,
+                mime_type=MimeType.PNG.value,
+                byte_size=len(data),
+                width=width,
+                height=height,
+                has_icc=0,
+                storage_path=storage_path,
+            ),
+        )
 
 
 @dataclass(frozen=True)

@@ -37,8 +37,13 @@ class TokenFixture:
     image: NDArray[np.uint8]  # RGB
     text: str
     quad: NDArray[np.float32]  # text box corners TL, TR, BR, BL in image px
+    # (char, ink-box quad in image px) for every non-space character, left to right
+    char_quads: tuple[tuple[str, NDArray[np.float32]], ...]
     surface: Surface
     background: str
+    # Engraved only: direction from each stroke's shadow side to its highlight side,
+    # degrees in text coordinates (0 = +x, 90 = +y with image y pointing down).
+    light_deg: float | None
     blur_sigma: float
     noise_sigma: float
     jpeg_quality: int | None
@@ -90,28 +95,49 @@ def _texture(rng: np.random.Generator, kind: str, shape: tuple[int, int]) -> F32
 # ---------------------------------------------------------------- text
 
 
+Box = tuple[float, float, float, float]
+
+
 def _render_text_mask(
     text: str, font_px: int, margin: int
-) -> tuple[F32, tuple[int, int, int, int]]:
-    """0..1 text mask on a plane with `margin` px around the ink, plus the ink box."""
+) -> tuple[F32, Box, list[tuple[str, Box]]]:
+    """0..1 text mask on a plane with `margin` px around the ink, the ink box, and
+    the ink box of every non-space character (plane coordinates)."""
     font = ImageFont.load_default(size=font_px)
     left, top, right, bottom = font.getbbox(text)
     width, height = right - left + 2 * margin, bottom - top + 2 * margin
+    origin_x, origin_y = margin - left, margin - top
     plane = Image.new("L", (width, height), 0)
-    ImageDraw.Draw(plane).text((margin - left, margin - top), text, fill=255, font=font)
+    ImageDraw.Draw(plane).text((origin_x, origin_y), text, fill=255, font=font)
     box = (margin, margin, margin + right - left, margin + bottom - top)
-    return np.asarray(plane, dtype=np.float32) / 255.0, box
+    chars: list[tuple[str, Box]] = []
+    for index, char in enumerate(text):
+        if char == " ":
+            continue
+        # Exact ink box: draw the character alone where it sits in the line.
+        single = Image.new("L", (width, height), 0)
+        x = origin_x + font.getlength(text[:index])
+        ImageDraw.Draw(single).text((x, origin_y), char, fill=255, font=font)
+        ys, xs = np.nonzero(np.asarray(single) > 127)
+        if len(xs):
+            chars.append((char, (float(xs.min()), float(ys.min()), xs.max() + 1.0, ys.max() + 1.0)))
+    return np.asarray(plane, dtype=np.float32) / 255.0, box, chars
 
 
-def _apply_surface(rng: np.random.Generator, surface: Surface, mask: F32) -> tuple[F32, str]:
-    """Composite the text mask onto a surface texture. Returns (plane RGB, background name)."""
+def _apply_surface(
+    rng: np.random.Generator, surface: Surface, mask: F32
+) -> tuple[F32, str, float | None]:
+    """Composite the text mask onto a surface texture.
+
+    Returns (plane RGB, background name, light angle in degrees for engraved text).
+    """
     shape = mask.shape[:2]
     if surface == "print":
         bg = _texture(rng, "paper", (shape[0], shape[1]))
         density = np.clip(0.88 + _noise(rng, shape, 0.05), 0, 1)
         ink = np.array([28, 30, 38], dtype=np.float32)
         alpha = (mask * density)[..., None]
-        return bg * (1 - alpha) + ink * alpha, "paper"
+        return bg * (1 - alpha) + ink * alpha, "paper", None
     if surface == "paint":
         bg = _texture(rng, "plaster", (shape[0], shape[1]))
         rough = cv2.GaussianBlur(mask, (0, 0), 1.2) + _low_freq(rng, shape, 3, 0.25)
@@ -119,13 +145,13 @@ def _apply_surface(rng: np.random.Generator, surface: Surface, mask: F32) -> tup
         paint = np.array(
             [[150, 32, 30], [20, 22, 26], [24, 60, 140]][int(rng.integers(0, 3))], np.float32
         )
-        return bg * (1 - alpha) + paint * alpha, "plaster"
+        return bg * (1 - alpha) + paint * alpha, "plaster", None
     if surface == "laser_mark":
         kind = "metal" if rng.random() < 0.6 else "plastic"
         bg = _texture(rng, kind, (shape[0], shape[1]))
         alpha = (cv2.GaussianBlur(mask, (0, 0), 0.6) * 0.7)[..., None]
         mark = np.array([0.35, 0.33, 0.30], dtype=np.float32)  # darkening with a warm tint
-        return bg * (1 - alpha * (1 - mark)), kind
+        return bg * (1 - alpha * (1 - mark)), kind, None
     # engraved: grooves lit from a random direction
     kind = "metal" if rng.random() < 0.7 else "plastic"
     bg = _texture(rng, kind, (shape[0], shape[1]))
@@ -134,7 +160,7 @@ def _apply_surface(rng: np.random.Generator, surface: Surface, mask: F32) -> tup
     angle = float(rng.uniform(0, 2 * np.pi))
     shading = 1.0 + 1.6 * (gx * np.cos(angle) + gy * np.sin(angle))
     groove = 1.0 - 0.25 * depth
-    return bg * (shading * groove)[..., None], kind
+    return bg * (shading * groove)[..., None], kind, float(np.degrees(angle))
 
 
 # ---------------------------------------------------------------- composition
@@ -156,8 +182,8 @@ def make_token_image(
     """Render `text` on `surface`, place it in perspective on a canvas, degrade it."""
     rng = np.random.default_rng(seed)
     margin = font_px
-    mask, (x0, y0, x1, y1) = _render_text_mask(text, font_px, margin)
-    plane, background = _apply_surface(rng, surface, mask)
+    mask, (x0, y0, x1, y1), char_boxes = _render_text_mask(text, font_px, margin)
+    plane, background, light_deg = _apply_surface(rng, surface, mask)
     ph, pw = mask.shape
 
     cw, ch = canvas
@@ -195,14 +221,20 @@ def make_token_image(
         Image.fromarray(image, "RGB").save(buffer, "JPEG", quality=jpeg_quality)
         image = np.asarray(Image.open(io.BytesIO(buffer.getvalue())).convert("RGB")).copy()
 
-    text_corners = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], dtype=np.float32)
-    quad = cv2.perspectiveTransform(text_corners.reshape(-1, 1, 2), homography).reshape(4, 2)
+    def to_image(box: Box) -> NDArray[np.float32]:
+        bx0, by0, bx1, by1 = box
+        corners = np.array([[bx0, by0], [bx1, by0], [bx1, by1], [bx0, by1]], dtype=np.float32)
+        warped = cv2.perspectiveTransform(corners.reshape(-1, 1, 2), homography)
+        return np.asarray(warped.reshape(4, 2), dtype=np.float32)
+
     return TokenFixture(
         image=image,
         text=text,
-        quad=quad.astype(np.float32),
+        quad=to_image((x0, y0, x1, y1)),
+        char_quads=tuple((char, to_image(box)) for char, box in char_boxes),
         surface=surface,
         background=background,
+        light_deg=light_deg,
         blur_sigma=blur,
         noise_sigma=noise,
         jpeg_quality=jpeg_quality,

@@ -1,8 +1,14 @@
-"""Task handler registry. Each phase registers its handlers here (e.g. Phase 5: extract_glyphs)."""
+"""Task handler registry. Handlers get their dependencies through a closure."""
 
 from collections.abc import Mapping
+from functools import partial
 
 from app.db.models.enums import TaskType
+from app.services.extraction import ExtractionDeps, handle_extract_glyphs
 from app.worker.runner import Handler
 
-HANDLERS: Mapping[TaskType, Handler] = {}
+
+def create_handlers(extraction: ExtractionDeps) -> Mapping[TaskType, Handler]:
+    return {
+        TaskType.EXTRACT_GLYPHS: partial(handle_extract_glyphs, extraction),
+    }

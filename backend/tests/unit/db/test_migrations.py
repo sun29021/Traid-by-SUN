@@ -9,7 +9,17 @@ from app.core.config import Settings
 from app.db.base import Base
 from app.db.engine import DB_FILENAME, Database, alembic_config, run_migrations
 
-EXPECTED_TABLES = {"users", "sessions", "audit_events", "app_settings", "files", "tasks"}
+EXPECTED_TABLES = {
+    "users",
+    "sessions",
+    "audit_events",
+    "app_settings",
+    "files",
+    "tasks",
+    "profiles",
+    "reference_images",
+    "glyphs",
+}
 
 
 def _tables(path: Path) -> set[str]:

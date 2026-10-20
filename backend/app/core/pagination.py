@@ -30,6 +30,34 @@ def encode_cursor(created_at: datetime, row_id: str) -> str:
     return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
 
 
+_INVALID_CURSOR_DETAILS = {
+    "fields": [
+        {
+            "path": "cursor",
+            "code": "VALIDATION_FAILED",
+            "message": "Use meta.next_cursor from a previous page",
+        }
+    ]
+}
+
+
+def encode_offset(offset: int) -> str:
+    """Opaque cursor for lists sorted by something other than creation time."""
+    return base64.urlsafe_b64encode(f"o:{offset}".encode()).decode().rstrip("=")
+
+
+def decode_offset(value: str) -> int:
+    try:
+        raw = base64.urlsafe_b64decode((value + "=" * (-len(value) % 4)).encode()).decode()
+        prefix, number = raw.split(":", 1)
+        offset = int(number)
+        if prefix != "o" or offset < 0:
+            raise ValueError
+    except (binascii.Error, ValueError, UnicodeDecodeError) as exc:
+        raise ValidationFailed("Invalid cursor", details=_INVALID_CURSOR_DETAILS) from exc
+    return offset
+
+
 def decode_cursor(value: str) -> Cursor:
     try:
         padded = value + "=" * (-len(value) % 4)

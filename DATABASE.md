@@ -128,7 +128,7 @@ Constraints: UNIQUE (`profile_id`, `file_id`) — same image cannot be added twi
 | id | TEXT | no | — | PK |
 | profile_id | TEXT | no | — | FK → profiles.id ON DELETE CASCADE |
 | source_reference_id | TEXT | yes | — | FK → reference_images.id ON DELETE CASCADE |
-| source_job_id | TEXT | yes | — | FK → edit_jobs.id ON DELETE SET NULL (glyph harvested from a target's *original* pixels) |
+| source_job_id | TEXT | yes | — | FK → edit_jobs.id ON DELETE SET NULL (glyph harvested from a target's *original* pixels). **Added with the jobs table (Phase 9/11);** migration `0004_profiles_glyphs` creates glyphs without it |
 | crop_file_id | TEXT | no | — | FK → files.id (RGBA PNG: ink texture + soft alpha) |
 | char | TEXT | no | — | Exactly 1 character, must be in profile charset (service-validated) |
 | status | TEXT | no | `'auto'` | CHECK in (`auto`, `confirmed`, `rejected`) |

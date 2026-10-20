@@ -31,17 +31,25 @@ from app.core.http_security import (
 from app.core.logging import access_log_middleware, configure_logging
 from app.core.request_context import REQUEST_ID_HEADER, request_id_middleware
 from app.db.engine import Database, run_migrations
+from app.engine.detect import PaddleOcr, TextDetector
 from app.engine.models import ModelRegistry
+from app.services.extraction import ExtractionDeps
 from app.services.owner import ensure_local_owner
 from app.storage.filestore import FileStore
-from app.worker.handlers import HANDLERS
+from app.worker.handlers import create_handlers
 from app.worker.runner import TaskRunner
 
 VITE_DEV_ORIGIN = "http://localhost:5173"
 TEST_CLIENT_ORIGIN = "http://testserver"
 
 
-def create_app(settings: Settings | None = None, *, start_worker: bool = True) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    *,
+    start_worker: bool = True,
+    detector: TextDetector | None = None,
+) -> FastAPI:
+    """`detector` replaces PP-OCR (tests use a fake so they run without model files)."""
     settings = settings or get_settings()
     configure_logging(settings)
     docs_enabled = not settings.is_production
@@ -52,19 +60,24 @@ def create_app(settings: Settings | None = None, *, start_worker: bool = True) -
         run_migrations(db.engine)
         with db.session_factory() as session:
             owner_id = ensure_local_owner(session).id
-        runner = TaskRunner(db, HANDLERS)
+        # Sessions load lazily on first use, so startup stays fast without models.
+        models = ModelRegistry.from_manifest(
+            settings.model_dir, device=settings.device, gpu_device_id=settings.gpu_device_id
+        )
+        store = FileStore(settings.data_dir / "files")
+        handlers = create_handlers(
+            ExtractionDeps(db=db, store=store, detector=detector or PaddleOcr(models))
+        )
+        runner = TaskRunner(db, handlers)
         runner.recover_interrupted()
         if start_worker:
             runner.start()
         app.state.settings = settings
         app.state.db = db
         app.state.owner_id = owner_id
-        app.state.file_store = FileStore(settings.data_dir / "files")
+        app.state.file_store = store
         app.state.task_runner = runner
-        # Sessions load lazily on first use, so startup stays fast without models.
-        app.state.models = ModelRegistry.from_manifest(
-            settings.model_dir, device=settings.device, gpu_device_id=settings.gpu_device_id
-        )
+        app.state.models = models
         try:
             yield
         finally:

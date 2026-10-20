@@ -25,6 +25,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/files/{file_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get File */
+        get: operations["get_file_api_v1_files__file_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/files/{file_id}/thumb": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Thumbnail
+         * @description Downscaled preview (JPEG, or PNG when the image has transparency).
+         */
+        get: operations["get_thumbnail_api_v1_files__file_id__thumb_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/glyphs/{glyph_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Glyph */
+        patch: operations["update_glyph_api_v1_glyphs__glyph_id__patch"];
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -39,6 +93,202 @@ export interface paths {
         get: operations["health_api_v1_health_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Profiles
+         * @description Most recently updated first. `archived=all` includes archived profiles.
+         */
+        get: operations["list_profiles_api_v1_profiles_get"];
+        put?: never;
+        /** Create Profile */
+        post: operations["create_profile_api_v1_profiles_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Profile */
+        get: operations["get_profile_api_v1_profiles__profile_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Profile
+         * @description Permanently delete an archived profile. `confirm_name` must equal its name.
+         */
+        delete: operations["delete_profile_api_v1_profiles__profile_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Profile */
+        patch: operations["update_profile_api_v1_profiles__profile_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive Profile */
+        post: operations["archive_profile_api_v1_profiles__profile_id__archive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/coverage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Coverage */
+        get: operations["get_coverage_api_v1_profiles__profile_id__coverage_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/glyphs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Glyphs
+         * @description Grouped by character, best quality first.
+         */
+        get: operations["list_glyphs_api_v1_profiles__profile_id__glyphs_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/glyphs/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Update Glyphs */
+        post: operations["bulk_update_glyphs_api_v1_profiles__profile_id__glyphs_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/references": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List References */
+        get: operations["list_references_api_v1_profiles__profile_id__references_get"];
+        put?: never;
+        /**
+         * Upload References
+         * @description Store images, skip duplicates, report rejected files, queue glyph extraction.
+         */
+        post: operations["upload_references_api_v1_profiles__profile_id__references_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/unarchive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Unarchive Profile */
+        post: operations["unarchive_profile_api_v1_profiles__profile_id__unarchive_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/references/{reference_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete Reference
+         * @description Remove the image and every glyph extracted from it.
+         */
+        delete: operations["delete_reference_api_v1_references__reference_id__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Reference
+         * @description Set the known text. A processed image is re-extracted with it (task returned).
+         */
+        patch: operations["update_reference_api_v1_references__reference_id__patch"];
+        trace?: never;
+    };
+    "/api/v1/references/{reference_id}/reextract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reextract Reference
+         * @description Replace this image's unreviewed glyphs; confirmed/rejected decisions are kept.
+         */
+        post: operations["reextract_reference_api_v1_references__reference_id__reextract_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -161,6 +411,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * Alignment
+         * @enum {string}
+         */
+        Alignment: "auto" | "left" | "center" | "right";
         /** AuditEventOut */
         AuditEventOut: {
             /** Action */
@@ -180,9 +435,81 @@ export interface components {
             /** User Id */
             user_id: string | null;
         };
+        /** Body_upload_references_api_v1_profiles__profile_id__references_post */
+        Body_upload_references_api_v1_profiles__profile_id__references_post: {
+            /**
+             * Files
+             * @description 1-50 JPEG, PNG or TIFF images
+             */
+            files: string[];
+            /**
+             * Known Text
+             * @description Optional, per file
+             */
+            known_text?: string[] | null;
+        };
+        /** BulkResult */
+        BulkResult: {
+            /** Updated */
+            updated: number;
+        };
+        /** Coverage */
+        Coverage: {
+            /** Missing */
+            missing: string[];
+            /** Ready Chars */
+            ready_chars: number;
+            /** Total Chars */
+            total_chars: number;
+        };
+        /** CoverageItem */
+        CoverageItem: {
+            /** Auto */
+            auto: number;
+            /** Best Quality */
+            best_quality: number;
+            /** Char */
+            char: string;
+            /** Confirmed */
+            confirmed: number;
+            /** Ready */
+            ready: boolean;
+            /** Rejected */
+            rejected: number;
+        };
+        /** DataEnvelope[BulkResult] */
+        DataEnvelope_BulkResult_: {
+            data: components["schemas"]["BulkResult"];
+        };
+        /** DataEnvelope[GlyphOut] */
+        DataEnvelope_GlyphOut_: {
+            data: components["schemas"]["GlyphOut"];
+        };
         /** DataEnvelope[Health] */
         DataEnvelope_Health_: {
             data: components["schemas"]["Health"];
+        };
+        /** DataEnvelope[list[CoverageItem]] */
+        DataEnvelope_list_CoverageItem__: {
+            /** Data */
+            data: components["schemas"]["CoverageItem"][];
+        };
+        /** DataEnvelope[list[ProfileOut]] */
+        DataEnvelope_list_ProfileOut__: {
+            /** Data */
+            data: components["schemas"]["ProfileOut"][];
+        };
+        /** DataEnvelope[ProfileOut] */
+        DataEnvelope_ProfileOut_: {
+            data: components["schemas"]["ProfileOut"];
+        };
+        /** DataEnvelope[ReferenceChange] */
+        DataEnvelope_ReferenceChange_: {
+            data: components["schemas"]["ReferenceChange"];
+        };
+        /** DataEnvelope[ReferenceUpload] */
+        DataEnvelope_ReferenceUpload_: {
+            data: components["schemas"]["ReferenceUpload"];
         };
         /** DataEnvelope[SystemStatus] */
         DataEnvelope_SystemStatus_: {
@@ -207,6 +534,105 @@ export interface components {
             /** Ready */
             ready: boolean;
         };
+        /** FileRef */
+        FileRef: {
+            /** Byte Size */
+            byte_size: number;
+            /** Height */
+            height: number | null;
+            /** Id */
+            id: string;
+            /** Mime Type */
+            mime_type: string;
+            /** Original Name */
+            original_name: string | null;
+            /** Thumb Url */
+            thumb_url: string | null;
+            /** Url */
+            url: string;
+            /** Width */
+            width: number | null;
+        };
+        /** GlyphBulk */
+        GlyphBulk: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "confirm" | "reject" | "relabel";
+            /** Char */
+            char?: string | null;
+            /** Ids */
+            ids: string[];
+        };
+        /** GlyphMetricsOut */
+        GlyphMetricsOut: {
+            /** Angle Deg */
+            angle_deg: number;
+            /** Bg Luma */
+            bg_luma: number;
+            /** Blur Sigma */
+            blur_sigma: number;
+            /** Cap Height Px */
+            cap_height_px: number;
+            /** Contrast */
+            contrast: number;
+            /** Ink Color */
+            ink_color: string;
+            /** Light Dir Deg */
+            light_dir_deg: number | null;
+            /** Noise Sigma */
+            noise_sigma: number;
+            /** Stroke Width Px */
+            stroke_width_px: number;
+        };
+        /** GlyphOut */
+        GlyphOut: {
+            /** Accept Count */
+            accept_count: number;
+            /** Char */
+            char: string;
+            /** Created At */
+            created_at: string;
+            /** Crop Url */
+            crop_url: string;
+            /** Id */
+            id: string;
+            metrics: components["schemas"]["GlyphMetricsOut"];
+            /** Ocr Confidence */
+            ocr_confidence: number;
+            /** Profile Id */
+            profile_id: string;
+            /** Quality Score */
+            quality_score: number;
+            /** Reject Count */
+            reject_count: number;
+            source: components["schemas"]["GlyphSource"];
+            status: components["schemas"]["GlyphStatus"];
+            /** Use Count */
+            use_count: number;
+        };
+        /** GlyphSource */
+        GlyphSource: {
+            /** Id */
+            id: string | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "reference" | "job";
+        };
+        /**
+         * GlyphStatus
+         * @enum {string}
+         */
+        GlyphStatus: "auto" | "confirmed" | "rejected";
+        /** GlyphUpdate */
+        GlyphUpdate: {
+            /** Char */
+            char?: string | null;
+            status?: components["schemas"]["GlyphStatus"] | null;
+        };
         /** Health */
         Health: {
             /**
@@ -226,6 +652,18 @@ export interface components {
         ListEnvelope_AuditEventOut_: {
             /** Data */
             data: components["schemas"]["AuditEventOut"][];
+            meta: components["schemas"]["ListMeta"];
+        };
+        /** ListEnvelope[GlyphOut] */
+        ListEnvelope_GlyphOut_: {
+            /** Data */
+            data: components["schemas"]["GlyphOut"][];
+            meta: components["schemas"]["ListMeta"];
+        };
+        /** ListEnvelope[ReferenceOut] */
+        ListEnvelope_ReferenceOut_: {
+            /** Data */
+            data: components["schemas"]["ReferenceOut"][];
             meta: components["schemas"]["ListMeta"];
         };
         /** ListEnvelope[TaskOut] */
@@ -263,6 +701,156 @@ export interface components {
             /** Display Name */
             display_name: string;
         };
+        /** ProfileCreate */
+        ProfileCreate: {
+            alignment?: components["schemas"]["Alignment"] | null;
+            /** Charset */
+            charset?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name: string;
+            /** Pattern Strict */
+            pattern_strict?: boolean | null;
+            /** Ready Threshold */
+            ready_threshold?: number | null;
+            spacing_mode?: components["schemas"]["SpacingMode"] | null;
+            surface_type: components["schemas"]["SurfaceType"];
+            /** Token Pattern */
+            token_pattern?: string | null;
+            /** Use Auto Glyphs */
+            use_auto_glyphs?: boolean | null;
+        };
+        /** ProfileDelete */
+        ProfileDelete: {
+            /** Confirm Name */
+            confirm_name: string;
+        };
+        /** ProfileOut */
+        ProfileOut: {
+            alignment: components["schemas"]["Alignment"];
+            /** Archived At */
+            archived_at: string | null;
+            /** Charset */
+            charset: string;
+            coverage: components["schemas"]["Coverage"];
+            /** Created At */
+            created_at: string;
+            /** Description */
+            description: string | null;
+            /** Engine */
+            engine: string;
+            /** Id */
+            id: string;
+            /** Learned Params */
+            learned_params: {
+                [key: string]: unknown;
+            };
+            /** Name */
+            name: string;
+            /** Pattern Strict */
+            pattern_strict: boolean;
+            /** Ready Threshold */
+            ready_threshold: number;
+            spacing_mode: components["schemas"]["SpacingMode"];
+            stats: components["schemas"]["ProfileStats"];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "training" | "needs_review" | "ready";
+            surface_type: components["schemas"]["SurfaceType"];
+            /** Token Pattern */
+            token_pattern: string | null;
+            /** Updated At */
+            updated_at: string;
+            /** Use Auto Glyphs */
+            use_auto_glyphs: boolean;
+        };
+        /** ProfileStats */
+        ProfileStats: {
+            /** Acceptance Rate */
+            acceptance_rate: number | null;
+            /** Glyphs Auto */
+            glyphs_auto: number;
+            /** Glyphs Confirmed */
+            glyphs_confirmed: number;
+            /** Jobs Accepted */
+            jobs_accepted: number;
+            /** References */
+            references: number;
+        };
+        /** ProfileUpdate */
+        ProfileUpdate: {
+            alignment?: components["schemas"]["Alignment"] | null;
+            /** Charset */
+            charset?: string | null;
+            /** Description */
+            description?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Pattern Strict */
+            pattern_strict?: boolean | null;
+            /** Ready Threshold */
+            ready_threshold?: number | null;
+            spacing_mode?: components["schemas"]["SpacingMode"] | null;
+            surface_type?: components["schemas"]["SurfaceType"] | null;
+            /** Token Pattern */
+            token_pattern?: string | null;
+            /** Use Auto Glyphs */
+            use_auto_glyphs?: boolean | null;
+        };
+        /** ReferenceChange */
+        ReferenceChange: {
+            reference: components["schemas"]["ReferenceOut"];
+            task: components["schemas"]["TaskOut"] | null;
+        };
+        /** ReferenceOut */
+        ReferenceOut: {
+            /** Conditions */
+            conditions: {
+                [key: string]: number;
+            } | null;
+            /** Created At */
+            created_at: string;
+            /** Error Code */
+            error_code: string | null;
+            file: components["schemas"]["FileRef"];
+            /** Glyph Count */
+            glyph_count: number;
+            /** Id */
+            id: string;
+            /** Known Text */
+            known_text: string | null;
+            /** Profile Id */
+            profile_id: string;
+            status: components["schemas"]["ReferenceStatus"];
+        };
+        /**
+         * ReferenceStatus
+         * @enum {string}
+         */
+        ReferenceStatus: "pending" | "processing" | "processed" | "failed";
+        /** ReferenceUpdate */
+        ReferenceUpdate: {
+            /** Known Text */
+            known_text: string | null;
+        };
+        /** ReferenceUpload */
+        ReferenceUpload: {
+            /** Created */
+            created: components["schemas"]["ReferenceOut"][];
+            /** Rejected */
+            rejected: components["schemas"]["UploadIssue"][];
+            /** Skipped */
+            skipped: components["schemas"]["UploadIssue"][];
+            task: components["schemas"]["TaskOut"] | null;
+        };
+        /**
+         * SpacingMode
+         * @enum {string}
+         */
+        SpacingMode: "auto" | "monospace" | "proportional";
         /** StorageStatus */
         StorageStatus: {
             /** Data Dir */
@@ -274,6 +862,11 @@ export interface components {
             /** Stored Bytes */
             stored_bytes: number;
         };
+        /**
+         * SurfaceType
+         * @enum {string}
+         */
+        SurfaceType: "print" | "paint" | "laser_mark" | "engraved";
         /** SystemStatus */
         SystemStatus: {
             engine: components["schemas"]["EngineStatus"];
@@ -321,6 +914,15 @@ export interface components {
          * @enum {string}
          */
         TaskType: "extract_glyphs" | "detect" | "render" | "batch_run" | "batch_export" | "backup";
+        /** UploadIssue */
+        UploadIssue: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+            /** Name */
+            name: string | null;
+        };
         /** ValidationError */
         ValidationError: {
             /** Context */
@@ -399,6 +1001,105 @@ export interface operations {
             };
         };
     };
+    get_file_api_v1_files__file_id__get: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_thumbnail_api_v1_files__file_id__thumb_get: {
+        parameters: {
+            query?: {
+                size?: 256 | 512;
+            };
+            header?: never;
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_glyph_api_v1_glyphs__glyph_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                glyph_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GlyphUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_GlyphOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     health_api_v1_health_get: {
         parameters: {
             query?: never;
@@ -415,6 +1116,500 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DataEnvelope_Health_"];
+                };
+            };
+        };
+    };
+    list_profiles_api_v1_profiles_get: {
+        parameters: {
+            query?: {
+                archived?: "false" | "true" | "all";
+                q?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_list_ProfileOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_profile_api_v1_profiles_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ProfileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_profile_api_v1_profiles__profile_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ProfileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_profile_api_v1_profiles__profile_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileDelete"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_profile_api_v1_profiles__profile_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ProfileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    archive_profile_api_v1_profiles__profile_id__archive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ProfileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_coverage_api_v1_profiles__profile_id__coverage_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_list_CoverageItem__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_glyphs_api_v1_profiles__profile_id__glyphs_get: {
+        parameters: {
+            query?: {
+                char?: string | null;
+                cursor?: string | null;
+                limit?: number;
+                min_quality?: number | null;
+                status?: string | null;
+            };
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListEnvelope_GlyphOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_update_glyphs_api_v1_profiles__profile_id__glyphs_bulk_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GlyphBulk"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_BulkResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_references_api_v1_profiles__profile_id__references_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                limit?: number;
+                status?: string | null;
+            };
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListEnvelope_ReferenceOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_references_api_v1_profiles__profile_id__references_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_references_api_v1_profiles__profile_id__references_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ReferenceUpload_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unarchive_profile_api_v1_profiles__profile_id__unarchive_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ProfileOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_reference_api_v1_references__reference_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_reference_api_v1_references__reference_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferenceUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ReferenceChange_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reextract_reference_api_v1_references__reference_id__reextract_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_TaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

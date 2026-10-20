@@ -33,6 +33,36 @@ def quad_size(quad: Quad) -> tuple[int, int]:
     return max(1, round(float(width))), max(1, round(float(height)))
 
 
+def expand_quad(quad: Quad, ratio: float) -> Quad:
+    """Grow a quad outward by `ratio` times its height on every side (keeps its shape).
+
+    Used before cutting a text strip so characters keep a background border.
+    """
+    tl, tr, br, bl = quad.astype(np.float64)
+    along = ((tr - tl) + (br - bl)) / 2
+    across = ((bl - tl) + (br - tr)) / 2
+    height = float(np.linalg.norm(across)) or 1.0
+    unit_along = along / (float(np.linalg.norm(along)) or 1.0)
+    unit_across = across / height
+    pad = ratio * height
+    grown = np.array(
+        [
+            tl - pad * unit_along - pad * unit_across,
+            tr + pad * unit_along - pad * unit_across,
+            br + pad * unit_along + pad * unit_across,
+            bl - pad * unit_along + pad * unit_across,
+        ]
+    )
+    return np.asarray(grown, dtype=np.float32)
+
+
+def clip_quad(quad: Quad, width: int, height: int) -> Quad:
+    clipped = quad.copy()
+    clipped[:, 0] = np.clip(clipped[:, 0], 0, width - 1)
+    clipped[:, 1] = np.clip(clipped[:, 1], 0, height - 1)
+    return clipped
+
+
 def quad_area(quad: Quad) -> float:
     return float(abs(cv2.contourArea(quad.astype(np.float32))))
 

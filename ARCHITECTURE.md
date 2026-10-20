@@ -261,7 +261,7 @@ When enabled, the design below applies on top of 7.1 without changing data owner
 | Detect & read | PP-OCRv4 detection (DB) + recognition (SVTR, CTC) with Traid's own pre/post-processing; detection runs at max side 1920 px so small tokens in large photos survive | ✅ ONNX |
 | Choose token | Weighted score: regex match, Gaussian position prior from `typical_region`, glyph-style similarity, OCR confidence | Rule-based + learned stats |
 | Rectify | Homography from quad (OpenCV) | — |
-| Segment characters | Sauvola/Otsu binarization, connected components, merge/split guided by OCR char count and CTC positions | — |
+| Segment characters | Strip = detected box padded by 25 % of its height. Ink map = absolute difference between the strip and a large median filter (Otsu threshold; one polarity for ink, both for relief). Components → column groups (horizontal overlap merges dots/accents), reconciled with the label count (merge fragments, split plausible touching pairs near the middle), mapped left to right. CTC positions only guide splits. Spaces are never inferred from gaps (measured unreliable) | — |
 | Soft mask | **Ink mode:** background estimate (inpainted) + ink colour estimate → alpha = clip((bg − I)/(bg − ink)) per channel-luminance. **Relief mode:** binary glyph mask from segmentation, dilated to include the stroke's highlight/shadow rim; the RGB patch itself is kept as the glyph texture. | — |
 | Remove | Dilated union of glyph alphas → LaMa inpainting; OpenCV Telea fallback | ✅ ONNX |
 | Select glyphs | Same-image glyphs first; else bank glyphs ranked by condition similarity (cap height, stroke width, blur σ, background luminance, contrast, angle) × learned acceptance score | Learned stats |

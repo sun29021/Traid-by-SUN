@@ -2,6 +2,7 @@
 
 import io
 
+import numpy as np
 from PIL import Image
 
 from app.db.engine import Database
@@ -14,6 +15,12 @@ def make_user(db: Database, username: str) -> str:
         session.add(user)
         session.flush()
         return user.id
+
+
+def png_bytes(rgb: "np.ndarray") -> bytes:
+    buffer = io.BytesIO()
+    Image.fromarray(rgb, "RGB").save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def image_bytes(
