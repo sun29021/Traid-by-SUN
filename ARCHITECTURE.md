@@ -40,8 +40,8 @@
 | **SQLAlchemy 2.x** + **Alembic** | latest stable | Typed ORM, migrations; lets us move to Postgres later without rewriting queries. |
 | **SQLite** (WAL mode) | bundled | Zero-ops, single file, perfect for single user; transactional. |
 | **NumPy**, **OpenCV** (`opencv-python-headless`), **Pillow** | latest stable | Geometry, binarization, morphology, classical inpainting, Poisson blending, image IO incl. ICC/DPI. |
-| **ONNX Runtime** (`onnxruntime` CPU; optional `onnxruntime-directml` on Windows GPU or `onnxruntime-gpu` for CUDA) | latest stable | One inference runtime for all models, no PyTorch needed in MVP, works on any Windows GPU via DirectML. |
-| **RapidOCR** (`rapidocr-onnxruntime`) | latest stable | Ships PP-OCR detection/recognition pipelines on ONNX Runtime; easy Windows install; can return per-character positions. |
+| **ONNX Runtime** (`onnxruntime-directml` on Windows, which also includes the CPU provider; `onnxruntime` elsewhere — chosen by platform markers in `pyproject.toml`) | latest stable | One inference runtime for all models, no PyTorch needed in MVP, works on any Windows GPU via DirectML. |
+| **PP-OCRv4 models, own pipeline** (`engine/detect.py`) | models pinned in `models/manifest.json` | Decision 2026-10-20: RapidOCR was dropped. `rapidocr` 3.x downloads models at runtime from ModelScope (breaks "no runtime network"), and `rapidocr-onnxruntime` hard-requires CPU `onnxruntime` + full `opencv-python`, which conflict with `onnxruntime-directml` and the headless build. Traid runs the same PP-OCRv4 ONNX models with its own ~250-line DB/CTC pre- and post-processing: five fewer dependencies, GPU-compatible, and CTC gives per-character positions directly. The angle classifier is not used (tokens are assumed upright). |
 | **LaMa (big-lama) ONNX export** | pinned file | State-of-the-art free inpainting for removing text while keeping paper texture. |
 | **argon2-cffi** | latest stable | Password hashing (Argon2id). |
 | **uv** | latest stable | Fast, reproducible Python env + lock file. |
@@ -94,7 +94,7 @@ engine/
   types.py          Quad, Region, CharBox, GlyphSample, RenderParams, QualityReport, …
   io.py             decode/encode with ICC/DPI preservation, JPEG quality estimate
   models.py         lazy ONNX session loader + device selection + checksum check
-  detect.py         text detection & recognition (RapidOCR) → Regions
+  detect.py         text detection & recognition (PP-OCRv4 DB + CTC on ONNX Runtime) → Regions
   candidates.py     token candidate scoring (pattern, position prior, style similarity)
   geometry.py       homography rectify / inverse warp
   segment.py        per-character boxes, baseline, cap height, pitch
@@ -258,7 +258,7 @@ When enabled, the design below applies on top of 7.1 without changing data owner
 ### 10.1 MVP: Glyph Transplant engine
 | Stage | Technique | Model? |
 |-------|-----------|--------|
-| Detect & read | PP-OCR detection (DB) + recognition (SVTR/CRNN) via RapidOCR | ✅ ONNX |
+| Detect & read | PP-OCRv4 detection (DB) + recognition (SVTR, CTC) with Traid's own pre/post-processing; detection runs at max side 1920 px so small tokens in large photos survive | ✅ ONNX |
 | Choose token | Weighted score: regex match, Gaussian position prior from `typical_region`, glyph-style similarity, OCR confidence | Rule-based + learned stats |
 | Rectify | Homography from quad (OpenCV) | — |
 | Segment characters | Sauvola/Otsu binarization, connected components, merge/split guided by OCR char count and CTC positions | — |
@@ -291,7 +291,8 @@ Traid learns by **curating and ranking real data** and **adapting defaults** —
 ### 10.4 Model management
 - `models/manifest.json`: name, version, file, sha256, license, source URL.
 - `engine/models.py` verifies checksum at first load, picks device: `TRAID_DEVICE=auto` → DirectML/CUDA if available, else CPU; records device in `/system/status`.
-- **Owner hardware (PRD D-09):** dual-GPU laptop (NVIDIA RTX 3050 Laptop 4 GB + AMD Radeon integrated). Use **`onnxruntime-directml`** (no CUDA toolkit/cuDNN install needed). DirectML adapter numbering does not always match Task Manager, so `TRAID_GPU_DEVICE_ID=auto` picks the adapter with the most dedicated video memory (the NVIDIA GPU); an explicit index overrides it. Settings → Engine shows the chosen adapter's name. Added in Phase 4 (task 4.3).
+- **Owner hardware (PRD D-09):** dual-GPU laptop (NVIDIA RTX 3050 Laptop 4 GB + AMD Radeon integrated). Use **`onnxruntime-directml`** (no CUDA toolkit/cuDNN install needed). DirectML adapter numbering does not always match Task Manager, so `TRAID_GPU_DEVICE_ID=auto` passes DirectML's `performance_preference=high_performance, device_filter=gpu`, which selects the discrete NVIDIA GPU; an explicit index (`0`, `1`, …) overrides it. Measured 2026-10-20 on the owner's laptop, PP-OCR detection at 960×960: RTX 3050 0.037 s, AMD iGPU 0.107 s, CPU 0.19 s; a full detect+read of a 960×640 photo: ~95 ms GPU, ~150 ms CPU. Settings → Engine shows the active device (DirectML does not expose the adapter name through ONNX Runtime).
+- Model files come from the pinned `rapidocr-onnxruntime 1.4.4` wheel on PyPI (immutable, Apache-2.0); `scripts/fetch_models.py` verifies the wheel's SHA-256 and each extracted model's SHA-256.
 - VRAM budget (4 GB): LaMa runs on a crop around the token (≤ 1024 px side) and OCR on a downscaled copy for detection, so peak VRAM stays well under 2 GB. If a GPU run fails with out-of-memory, the stage retries once on CPU and reports it in the quality report.
 - Performance targets are measured on AC power; on battery Windows throttles the dGPU and Traid may pick the integrated GPU.
 

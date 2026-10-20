@@ -65,7 +65,7 @@ export const systemStatus: MockRoute = {
       schema_revision: '0003_local_owner',
       worker: { running: true, queued: 0 },
       storage: { data_dir: 'D:\\data', stored_bytes: 0, disk_free_bytes: 1, disk_total_bytes: 2 },
-      engine: { ready: false, device: null, models: [] },
+      engine: { ready: false, device: 'cpu', available_devices: ['cpu'], models: [] },
     },
   },
 };

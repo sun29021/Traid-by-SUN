@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "models": [
+    {
+      "name": "ppocr-det",
+      "role": "text_detection",
+      "version": "PP-OCRv4 det (ch, multilingual)",
+      "file": "ppocr_v4_det.onnx",
+      "sha256": "d2a7720d45a54257208b1e13e36a8479894cb74155a5efe29462512d42f49da9",
+      "size": 4745517,
+      "license": "Apache-2.0 (PaddleOCR; ONNX export by RapidAI)",
+      "required": true,
+      "source": {
+        "type": "pypi-wheel",
+        "url": "https://files.pythonhosted.org/packages/ba/12/1e5497183bdbe782dbb91bad1d0d2297dba4d2831b2652657f7517bfc6df/rapidocr_onnxruntime-1.4.4-py3-none-any.whl",
+        "sha256": "971d7d5f223a7a808662229df1ef69893809d8457d834e6373d3854bc1782cbf",
+        "member": "rapidocr_onnxruntime/models/ch_PP-OCRv4_det_infer.onnx"
+      }
+    },
+    {
+      "name": "ppocr-rec",
+      "role": "text_recognition",
+      "version": "PP-OCRv4 rec (ch, includes printable ASCII)",
+      "file": "ppocr_v4_rec.onnx",
+      "sha256": "48fc40f24f6d2a207a2b1091d3437eb3cc3eb6b676dc3ef9c37384005483683b",
+      "size": 10857958,
+      "license": "Apache-2.0 (PaddleOCR; ONNX export by RapidAI)",
+      "required": true,
+      "source": {
+        "type": "pypi-wheel",
+        "url": "https://files.pythonhosted.org/packages/ba/12/1e5497183bdbe782dbb91bad1d0d2297dba4d2831b2652657f7517bfc6df/rapidocr_onnxruntime-1.4.4-py3-none-any.whl",
+        "sha256": "971d7d5f223a7a808662229df1ef69893809d8457d834e6373d3854bc1782cbf",
+        "member": "rapidocr_onnxruntime/models/ch_PP-OCRv4_rec_infer.onnx"
+      }
+    }
+  ]
+}

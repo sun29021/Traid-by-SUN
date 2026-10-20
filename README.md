@@ -4,7 +4,7 @@
 
 Traid replaces a short printed token in a photo or scan with a new value so that the new characters match the real print. It reuses real glyphs from your own reference images and adapts them to each target image. Everything runs locally; images never leave your machine.
 
-> Status: **Phases 0–3 done** (foundation, database and worker, local-mode security, design system and Welcome screen). Product features are built phase by phase (see `IMPLEMENTATION_PLAN.md`).
+> Status: **Phases 0–4 done** (foundation, database and worker, local-mode security, design system and Welcome screen, text detection engine). Product features are built phase by phase (see `IMPLEMENTATION_PLAN.md`).
 
 ## Project documents (source of truth)
 
@@ -30,7 +30,7 @@ Traid replaces a short printed token in a photo or scan with a new value so that
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
-This creates `backend\.venv` (Python 3.11) and installs `frontend\node_modules`. Copy `.env.example` to `.env` only if you want to change defaults. Traid needs no API keys or secrets.
+This creates `backend\.venv` (Python 3.11), installs `frontend\node_modules`, and downloads the AI models (about 15 MB, checksum-verified) into `models\`. To fetch models again later: `backend\.venv\Scripts\python.exe -I scripts\fetch_models.py`. Copy `.env.example` to `.env` only if you want to change defaults. Traid needs no API keys or secrets.
 
 ## Develop
 

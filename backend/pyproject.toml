@@ -13,6 +13,10 @@ dependencies = [
     "sqlalchemy>=2.1.5",
     "alembic>=1.20.0",
     "pillow>=13.0.0",
+    "numpy>=2.4.6",
+    "opencv-python-headless>=5.0.0.93",
+    "onnxruntime-directml>=1.24.4 ; sys_platform == 'win32'",
+    "onnxruntime>=1.31.0 ; sys_platform != 'win32'",
 ]
 
 [dependency-groups]
@@ -54,6 +58,11 @@ files = ["app"]
 # by tests/unit/db/test_migrations.py, which compares them against the ORM models.
 exclude = ["app/migrations/versions/"]
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+# onnxruntime ships no type information.
+module = ["onnxruntime", "onnxruntime.*"]
+ignore_missing_imports = true
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

@@ -1,4 +1,5 @@
-# Install all development dependencies (backend venv with Python 3.11 + frontend node_modules).
+# Install all development dependencies (backend venv with Python 3.11, frontend node_modules)
+# and download the AI models listed in models/manifest.json.
 # Usage: powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 . "$PSScriptRoot\common.ps1"
 
@@ -19,6 +20,10 @@ try {
 } finally {
     Pop-Location
 }
+
+Write-Host '==> AI models (pinned sources, SHA-256 verified)'
+& $BackendPython -I (Join-Path $PSScriptRoot 'fetch_models.py')
+if ($LASTEXITCODE -ne 0) { throw 'Model download failed' }
 
 New-Item -ItemType Directory -Force (Join-Path $RepoRoot 'data') | Out-Null
 Write-Host '==> Setup complete. Start development with: scripts\dev.ps1'

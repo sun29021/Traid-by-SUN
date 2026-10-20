@@ -198,8 +198,10 @@ export interface components {
         };
         /** EngineStatus */
         EngineStatus: {
+            /** Available Devices */
+            available_devices: ("cpu" | "directml" | "cuda")[];
             /** Device */
-            device: string | null;
+            device: ("cpu" | "directml" | "cuda") | null;
             /** Models */
             models: components["schemas"]["ModelStatus"][];
             /** Ready */
@@ -243,10 +245,16 @@ export interface components {
         ModelStatus: {
             /** Checksum Ok */
             checksum_ok: boolean;
+            /** Device */
+            device: ("cpu" | "directml" | "cuda") | null;
             /** Loaded */
             loaded: boolean;
             /** Name */
             name: string;
+            /** Present */
+            present: boolean;
+            /** Role */
+            role: string;
             /** Version */
             version: string;
         };

@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from app import __version__
 from app.api.deps import (
     CurrentUserDep,
+    ModelRegistryDep,
     SessionDep,
     SettingsDep,
     TaskRunnerDep,
@@ -26,10 +27,14 @@ def health() -> DataEnvelope[Health]:
 
 @router.get("/system/status", response_model=DataEnvelope[SystemStatus])
 def system_status(
-    user: CurrentUserDep, session: SessionDep, settings: SettingsDep, runner: TaskRunnerDep
+    user: CurrentUserDep,
+    session: SessionDep,
+    settings: SettingsDep,
+    runner: TaskRunnerDep,
+    models: ModelRegistryDep,
 ) -> DataEnvelope[SystemStatus]:
     status = system_service.get_status(
-        session, settings, owner_id=user.id, worker_running=runner.is_running
+        session, settings, models, owner_id=user.id, worker_running=runner.is_running
     )
     return DataEnvelope(data=status)
 

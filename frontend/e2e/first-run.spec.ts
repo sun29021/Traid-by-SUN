@@ -16,6 +16,8 @@ test('first run shows Welcome, then continues to the requested page', async ({ p
   await expect(page).toHaveURL(/\/welcome\?next=%2Fhistory$/);
   await expect(page.getByRole('heading', { name: 'Traid' })).toBeVisible();
   await expect(page.getByText(/^Running · v/)).toBeVisible();
+  // The E2E server uses the real models folder, so the engine reports itself ready.
+  await expect(page.getByText(/^Ready · (CPU|GPU)/)).toBeVisible();
   await expect(page.getByText('Traid · Designed & developed by Xavier Sun')).toBeVisible();
   expect(await seriousA11yViolations(page)).toEqual([]);
 

@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.core.errors import ErrorCode, Forbidden, Unauthorized, ValidationFailed
 from app.db.engine import Database
+from app.engine.models import ModelRegistry
 from app.repositories import users as users_repo
 from app.storage.filestore import FileStore
 from app.worker.runner import TaskRunner
@@ -45,6 +46,11 @@ def get_task_runner(request: Request) -> TaskRunner:
     return runner
 
 
+def get_model_registry(request: Request) -> ModelRegistry:
+    registry: ModelRegistry = request.app.state.models
+    return registry
+
+
 def get_session(db: Annotated[Database, Depends(get_database)]) -> Iterator[Session]:
     with db.session_factory() as session:
         yield session
@@ -53,6 +59,7 @@ def get_session(db: Annotated[Database, Depends(get_database)]) -> Iterator[Sess
 SettingsDep = Annotated[Settings, Depends(get_settings_dep)]
 SessionDep = Annotated[Session, Depends(get_session)]
 TaskRunnerDep = Annotated[TaskRunner, Depends(get_task_runner)]
+ModelRegistryDep = Annotated[ModelRegistry, Depends(get_model_registry)]
 
 
 @dataclass(frozen=True)

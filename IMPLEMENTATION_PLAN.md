@@ -95,12 +95,13 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 | 4.1 | `tests/fixtures/generate.py`: synthetic token images with ground truth (quad, text, blur, noise, JPEG quality) for every surface type: ink on paper, paint on a wall-like texture, laser mark and embossed/engraved text on brushed-metal and plastic textures (relief simulated with a height map + directional light). |
 | 4.2 | `engine/io.py`: decode/encode preserving ICC + DPI; JPEG quality estimate. |
 | 4.3 | `models/manifest.json` + `scripts/fetch_models.py` (checksums) + `engine/models.py` (lazy sessions, device select, CPU fallback). Use `onnxruntime-directml`; add `TRAID_GPU_DEVICE_ID` (auto = adapter with most dedicated VRAM, i.e. the RTX 3050 on the owner's laptop); OOM on GPU retries once on CPU. |
-| 4.4 | `engine/detect.py` (RapidOCR) → `Region` list; fake detector adapter for fast tests. |
+| 4.4 | `engine/detect.py` (PP-OCRv4 DB + CTC on ONNX Runtime, own pipeline) → `Region` list; fake detector adapter for fast tests. |
 | 4.5 | `engine/geometry.py` rectify/inverse warp. |
 | 4.6 | `GET /system/status` (models, device, queue, disk). |
 
 - **Tests:** IO round-trip keeps size/DPI/ICC; quality estimate ±5; detection finds fixture tokens (models mark); rectification corner error < 1 px; status endpoint.
 - **Done when:** a fixture image yields correct regions + text; status shows model/device.
+- **Status (2026-10-20): DONE.** `engine/io.py` (ICC/DPI kept, JPEG re-encoded with the source's own quantisation tables and subsampling, EXIF orientation applied and never copied, quality estimate ±2), `engine/geometry.py`, `engine/models.py` (manifest, cached checksums, lazy sessions, DirectML high-performance GPU with CPU fallback at creation and run time), `engine/detect.py` (own PP-OCRv4 pipeline, see ARCHITECTURE §2.1), `scripts/fetch_models.py`, `/system/status` engine section, fixture generator for all four surfaces. Result on fixtures: 12/12 tokens read exactly across print/paint/laser/engraved, box IoU 0.83–0.93. Known limit: PP-OCR rarely emits spaces → recovered in task 5.3.
 
 ## Phase 5 — Profiles, references & glyph extraction
 
@@ -110,7 +111,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 |------|--------|
 | 5.1 | Migration `0003_profiles_references_glyphs`: `profiles`, `reference_images`, `glyphs`. |
 | 5.2 | Profiles service + API (CRUD, archive, delete with confirm, derived status, coverage). Regex validation for `token_pattern`. |
-| 5.3 | `engine/segment.py` (char boxes, baseline, cap height, pitch) and `engine/matte.py` (ink mode: soft alpha; relief mode: rim-dilated mask + texture patch + lighting direction). Migration adds `profiles.surface_type` and `glyphs.light_dir_deg`. |
+| 5.3 | `engine/segment.py` (char boxes, baseline, cap height, pitch; **recover spaces from ink gaps**, because PP-OCR rarely outputs them — CTC time steps are too coarse, measured in Phase 4) and `engine/matte.py` (ink mode: soft alpha; relief mode: rim-dilated mask + texture patch + lighting direction). Migration adds `profiles.surface_type` and `glyphs.light_dir_deg`. |
 | 5.4 | `extract_glyphs` task handler: detect → filter by charset → rectify → segment → matte → glyph rows + PNG crops; per-reference status/error; known-text alignment (S). |
 | 5.5 | References API (upload multi-file with dedupe, list, patch known_text, re-extract, delete) and glyph API (list/filter, patch, bulk). |
 

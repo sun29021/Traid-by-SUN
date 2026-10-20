@@ -123,4 +123,22 @@ def test_system_status_is_available_before_acceptance(client: TestClient) -> Non
     assert data["schema_revision"] == "0003_local_owner"
     assert data["worker"] == {"running": False, "queued": 0}
     assert data["storage"]["disk_total_bytes"] > 0
-    assert data["engine"] == {"ready": False, "device": None, "models": []}
+    # Test settings point at an empty model folder: engine reported, but not ready.
+    engine = data["engine"]
+    assert (engine["ready"], engine["models"]) == (False, [])
+    assert "cpu" in engine["available_devices"]
+    assert engine["device"] in engine["available_devices"]
+
+
+def test_system_status_lists_installed_models(settings: Settings) -> None:
+    from app.core.config import REPO_ROOT
+
+    real_models = settings.model_copy(update={"model_dir": REPO_ROOT / "models"})
+    with TestClient(create_app(real_models, start_worker=False)) as client:
+        engine = client.get("/api/v1/system/status").json()["data"]["engine"]
+
+    names = {m["name"] for m in engine["models"]}
+    assert names == {"ppocr-det", "ppocr-rec"}
+    if not engine["ready"]:
+        pytest.skip("OCR models not installed")
+    assert all(m["present"] and m["checksum_ok"] and not m["loaded"] for m in engine["models"])

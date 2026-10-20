@@ -21,7 +21,7 @@ describe('Welcome', () => {
     renderApp('/welcome');
 
     expect(await screen.findByText('Running · v0.1.0')).toBeInTheDocument();
-    expect(await screen.findByText('Not installed yet')).toBeInTheDocument();
+    expect(await screen.findByText(/^Not installed/)).toBeInTheDocument();
     expect(screen.getByText('Traid · Designed & developed by Xavier Sun')).toBeInTheDocument();
 
     const start = screen.getByRole('button', { name: 'Start using Traid' });

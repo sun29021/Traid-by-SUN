@@ -35,16 +35,25 @@ class StorageStatus(ApiModel):
     disk_total_bytes: int
 
 
+Device = Literal["cpu", "directml", "cuda"]
+
+
 class ModelStatus(ApiModel):
     name: str
+    role: str
     version: str
-    loaded: bool
+    present: bool
     checksum_ok: bool
+    loaded: bool
+    device: Device | None
 
 
 class EngineStatus(ApiModel):
     ready: bool
-    device: str | None
+    """All required models present with valid checksums."""
+    device: Device | None
+    """Device of loaded models, or the device they will try first."""
+    available_devices: list[Device]
     models: list[ModelStatus]
 
 

@@ -31,6 +31,7 @@ from app.core.http_security import (
 from app.core.logging import access_log_middleware, configure_logging
 from app.core.request_context import REQUEST_ID_HEADER, request_id_middleware
 from app.db.engine import Database, run_migrations
+from app.engine.models import ModelRegistry
 from app.services.owner import ensure_local_owner
 from app.storage.filestore import FileStore
 from app.worker.handlers import HANDLERS
@@ -60,6 +61,10 @@ def create_app(settings: Settings | None = None, *, start_worker: bool = True) -
         app.state.owner_id = owner_id
         app.state.file_store = FileStore(settings.data_dir / "files")
         app.state.task_runner = runner
+        # Sessions load lazily on first use, so startup stays fast without models.
+        app.state.models = ModelRegistry.from_manifest(
+            settings.model_dir, device=settings.device, gpu_device_id=settings.gpu_device_id
+        )
         try:
             yield
         finally:

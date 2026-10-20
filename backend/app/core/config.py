@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     data_dir: Path = Path("./data")
     model_dir: Path = Path("./models")
     device: Literal["auto", "cpu", "directml", "cuda"] = "auto"
+    # "auto" = DirectML high-performance GPU (the discrete GPU on hybrid laptops), or an index.
+    gpu_device_id: str = Field(default="auto", pattern=r"^(auto|\d{1,2})$")
     max_upload_mb: int = Field(default=50, ge=1, le=500)
     max_pixels: int = Field(default=40_000_000, ge=1_000_000, le=200_000_000)
     session_idle_hours: int = Field(default=12, ge=1, le=168)

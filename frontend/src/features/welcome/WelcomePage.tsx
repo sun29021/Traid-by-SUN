@@ -6,6 +6,7 @@ import { Badge, Banner, Button, Checkbox, type Tone } from '@/components';
 import { ApiError } from '@/lib/api/client';
 import { queryKeys } from '@/lib/api/queryKeys';
 import { acceptWelcome, getHealth, getSystemStatus } from '@/lib/api/system';
+import { deviceLabel } from '@/lib/format/device';
 
 import styles from './Welcome.module.css';
 import { safeNextPath, useWelcome } from './useWelcome';
@@ -60,8 +61,8 @@ function useEngineChecks(): CheckRow[] {
       ? row('Background worker', 'success', 'Running')
       : row('Background worker', 'warning', 'Not running'),
     data.engine.ready
-      ? row('AI models', 'success', `Ready · ${data.engine.device ?? 'CPU'}`)
-      : row('AI models', 'info', 'Not installed yet'),
+      ? row('AI models', 'success', `Ready · ${deviceLabel(data.engine.device)}`)
+      : row('AI models', 'warning', 'Not installed — run scripts\\fetch_models.py'),
   ];
 }
 
