@@ -261,8 +261,7 @@ class _RenderInput:
     bank: list[GlyphSample]
 
 
-def _load_render_input(deps: JobDeps, ctx: TaskContext) -> _RenderInput | None:
-    job_id = str(ctx.payload["job_id"])
+def _load_render_input(deps: JobDeps, job_id: str, task_id: str | None) -> _RenderInput | None:
     with deps.db.session() as session:
         job = repo.get_unscoped(session, job_id)
         if job is None or not job.selected_quad or not job.original_text:
@@ -272,7 +271,7 @@ def _load_render_input(deps: JobDeps, ctx: TaskContext) -> _RenderInput | None:
         if profile is None or stored is None:
             return None
         job.status = JobStatus.RENDERING.value
-        task = session.get(Task, ctx.task_id)
+        task = session.get(Task, task_id) if task_id else None
         return _RenderInput(
             job_id=job.id,
             owner_id=job.owner_id,
@@ -288,20 +287,46 @@ def _load_render_input(deps: JobDeps, ctx: TaskContext) -> _RenderInput | None:
         )
 
 
+Report = Callable[[float, str], None]
+
+
 def handle_render(deps: JobDeps, ctx: TaskContext) -> None:
-    data = _load_render_input(deps, ctx)
+    overall = render_job(
+        deps,
+        str(ctx.payload["job_id"]),
+        str(ctx.payload["new_text"]),
+        dict(ctx.payload.get("params") or {}),
+        report=ctx.report,
+        task_id=ctx.task_id,
+    )
+    if overall is not None:
+        ctx.report(1.0, f"Rendered ({overall})")
+
+
+def render_job(
+    deps: JobDeps,
+    job_id: str,
+    new_text: str,
+    params_data: dict[str, Any],
+    *,
+    report: Report,
+    task_id: str | None = None,
+) -> str | None:
+    """Render one job and store the result; returns the quality verdict (None: skipped).
+
+    Engine errors mark the job failed and are raised as AppError.
+    """
+    data = _load_render_input(deps, job_id, task_id)
     if data is None:
-        return
-    new_text = str(ctx.payload["new_text"])
-    params_data = dict(ctx.payload.get("params") or {})
+        return None
     try:
         params = RenderParams.from_dict(params_data)
-        ctx.report(0.1, "Measuring the old token")
+        report(0.1, "Measuring the old token")
         decoded = deps.decoded(data.path)
         quad = np.asarray(data.quad, dtype=np.float32)
         key = (data.path, tuple(map(tuple, data.quad)), data.original_text, data.mode)
         prepared = deps.prepared(decoded, key, quad, data.original_text, data.mode)
-        ctx.report(0.3, "Removing and rendering")
+        report(0.3, "Removing and rendering")
         result = deps.synthesizer.render(
             decoded.rgb,
             prepared,
@@ -334,15 +359,17 @@ def handle_render(deps: JobDeps, ctx: TaskContext) -> None:
         _fail(deps, data.job_id, ErrorCode.INTERNAL_ERROR.value)
         raise
 
-    ctx.report(0.9, "Saving the result")
+    report(0.9, "Saving the result")
     with deps.db.session() as session:
         job = repo.get_unscoped(session, data.job_id)
         if job is None:
-            return
-        if data.task_created is not None and repo.newer_render_queued(
-            session, job.id, ctx.task_id, data.task_created
+            return None
+        if (
+            task_id is not None
+            and data.task_created is not None
+            and repo.newer_render_queued(session, job.id, task_id, data.task_created)
         ):
-            return  # a newer adjustment is queued; it will write the result
+            return None  # a newer adjustment is queued; it will write the result
         height, width = result.image.shape[:2]
         result_file = store_generated_file(
             session,
@@ -394,7 +421,7 @@ def handle_render(deps: JobDeps, ctx: TaskContext) -> None:
         job.engine_version = deps.synthesizer.version
         job.error_code = None
         job.status = JobStatus.RENDERED.value
-    ctx.report(1.0, f"Rendered ({result.quality.overall})")
+    return result.quality.overall
 
 
 def harvest_glyphs(deps: JobDeps, job_id: str) -> int:

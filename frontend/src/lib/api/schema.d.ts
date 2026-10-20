@@ -25,6 +25,139 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/batches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Batches */
+        get: operations["list_batches_api_v1_batches_get"];
+        put?: never;
+        /**
+         * Create
+         * @description Create the items and start rendering. Repeating a `client_request_id` returns the
+         *     existing batch.
+         */
+        post: operations["create_api_v1_batches_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Batch */
+        get: operations["get_batch_api_v1_batches__batch_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_id}/accept-passed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept Passed */
+        post: operations["accept_passed_api_v1_batches__batch_id__accept_passed_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancel_api_v1_batches__batch_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Export
+         * @description ZIP of every accepted item (names from the export pattern; collisions get _2, _3).
+         */
+        post: operations["export_api_v1_batches__batch_id__export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/{batch_id}/items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Items
+         * @description Items, failures and warnings first.
+         */
+        get: operations["list_items_api_v1_batches__batch_id__items_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/batches/validate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Validate
+         * @description Dry run: which values can be rendered, which cannot (and why), duplicates.
+         */
+        post: operations["validate_api_v1_batches_validate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/files/{file_id}": {
         parameters: {
             query?: never;
@@ -606,6 +739,11 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcceptedCount */
+        AcceptedCount: {
+            /** Accepted */
+            accepted: number;
+        };
         /**
          * Alignment
          * @enum {string}
@@ -629,6 +767,80 @@ export interface components {
             subject_type: string | null;
             /** User Id */
             user_id: string | null;
+        };
+        /** BatchCounts */
+        BatchCounts: {
+            /** Accepted */
+            accepted: number;
+            /** Failed */
+            failed: number;
+            /** Pending */
+            pending: number;
+            /** Rejected */
+            rejected: number;
+            /** Rendered */
+            rendered: number;
+            /** Warn */
+            warn: number;
+        };
+        /** BatchCreate */
+        BatchCreate: {
+            /** Client Request Id */
+            client_request_id?: string | null;
+            /** Name */
+            name?: string | null;
+            /** Template Job Id */
+            template_job_id: string;
+            /** Values */
+            values: string[];
+        };
+        /** BatchOut */
+        BatchOut: {
+            counts: components["schemas"]["BatchCounts"];
+            /** Created At */
+            created_at: string;
+            export_file: components["schemas"]["FileRef"] | null;
+            /** Finished At */
+            finished_at: string | null;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string | null;
+            /** Profile Id */
+            profile_id: string;
+            status: components["schemas"]["BatchStatus"];
+            /** Template Job Id */
+            template_job_id: string;
+            /** Total Count */
+            total_count: number;
+        };
+        /** BatchStarted */
+        BatchStarted: {
+            batch: components["schemas"]["BatchOut"];
+            task: components["schemas"]["TaskOut"];
+        };
+        /**
+         * BatchStatus
+         * @enum {string}
+         */
+        BatchStatus: "queued" | "running" | "completed" | "cancelled" | "failed";
+        /** BatchValidate */
+        BatchValidate: {
+            /** Profile Id */
+            profile_id: string;
+            /** Template Job Id */
+            template_job_id?: string | null;
+            /** Values */
+            values: string[];
+        };
+        /** BatchValidation */
+        BatchValidation: {
+            /** Duplicates */
+            duplicates: string[];
+            /** Invalid */
+            invalid: components["schemas"]["InvalidValue"][];
+            /** Valid */
+            valid: string[];
         };
         /** Body_create_job_api_v1_jobs_post */
         Body_create_job_api_v1_jobs_post: {
@@ -682,6 +894,22 @@ export interface components {
             /** Rejected */
             rejected: number;
         };
+        /** DataEnvelope[AcceptedCount] */
+        DataEnvelope_AcceptedCount_: {
+            data: components["schemas"]["AcceptedCount"];
+        };
+        /** DataEnvelope[BatchOut] */
+        DataEnvelope_BatchOut_: {
+            data: components["schemas"]["BatchOut"];
+        };
+        /** DataEnvelope[BatchStarted] */
+        DataEnvelope_BatchStarted_: {
+            data: components["schemas"]["BatchStarted"];
+        };
+        /** DataEnvelope[BatchValidation] */
+        DataEnvelope_BatchValidation_: {
+            data: components["schemas"]["BatchValidation"];
+        };
         /** DataEnvelope[BulkResult] */
         DataEnvelope_BulkResult_: {
             data: components["schemas"]["BulkResult"];
@@ -710,10 +938,20 @@ export interface components {
         DataEnvelope_LearningOut_: {
             data: components["schemas"]["LearningOut"];
         };
+        /** DataEnvelope[list[BatchOut]] */
+        DataEnvelope_list_BatchOut__: {
+            /** Data */
+            data: components["schemas"]["BatchOut"][];
+        };
         /** DataEnvelope[list[CoverageItem]] */
         DataEnvelope_list_CoverageItem__: {
             /** Data */
             data: components["schemas"]["CoverageItem"][];
+        };
+        /** DataEnvelope[list[EditJobOut]] */
+        DataEnvelope_list_EditJobOut__: {
+            /** Data */
+            data: components["schemas"]["EditJobOut"][];
         };
         /** DataEnvelope[list[GlyphVariantOut]] */
         DataEnvelope_list_GlyphVariantOut__: {
@@ -963,6 +1201,18 @@ export interface components {
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InvalidValue */
+        InvalidValue: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "CHAR_NOT_IN_CHARSET" | "PATTERN_MISMATCH" | "GLYPH_MISSING" | "VALIDATION_FAILED";
+            /** Message */
+            message: string;
+            /** Value */
+            value: string;
         };
         /** JobCreated */
         JobCreated: {
@@ -1463,6 +1713,261 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListEnvelope_AuditEventOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_batches_api_v1_batches_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_list_BatchOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_api_v1_batches_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_BatchStarted_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_batch_api_v1_batches__batch_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_BatchOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_passed_api_v1_batches__batch_id__accept_passed_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_AcceptedCount_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancel_api_v1_batches__batch_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_BatchOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_v1_batches__batch_id__export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_TaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_items_api_v1_batches__batch_id__items_get: {
+        parameters: {
+            query?: {
+                quality?: string | null;
+                status?: string | null;
+            };
+            header?: never;
+            path: {
+                batch_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_list_EditJobOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    validate_api_v1_batches_validate_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchValidate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_BatchValidation_"];
                 };
             };
             /** @description Validation Error */

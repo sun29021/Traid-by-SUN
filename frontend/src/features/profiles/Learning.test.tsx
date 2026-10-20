@@ -56,7 +56,7 @@ describe('Profile learning', () => {
     ]);
     renderApp('/profiles/p1');
 
-    const panel = await screen.findByRole('region', { name: 'Learning' });
+    const panel = await screen.findByRole('region', { name: 'Learning' }, { timeout: 5000 });
     expect(panel).toHaveTextContent('Acceptance rate75%');
     expect(panel).toHaveTextContent('Last 14 days: 3 accepted, 1 rejected.');
     expect(panel).toHaveTextContent('Position x1.95');

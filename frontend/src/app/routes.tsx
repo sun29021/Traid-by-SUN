@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 
+import { BatchPage } from '@/features/batch/BatchPage';
 import { EditorPage } from '@/features/editor/EditorPage';
 import { HomePage } from '@/features/home/HomePage';
 import { ProfileDetailPage } from '@/features/profiles/ProfileDetailPage';
@@ -19,16 +20,13 @@ const BUILT: Record<string, ReactNode> = {
   '/': <HomePage />,
   '/editor': <EditorPage />,
   '/profiles': <ProfilesPage />,
+  '/batch': <BatchPage />,
 };
 
 /** Pages that use the whole content area without padding (DESIGN.md §11.5). */
 const FULL_BLEED = new Set(['/editor']);
 
 const PLANNED: Record<string, { description: string; phase: string }> = {
-  '/batch': {
-    description: 'Apply a list of token values to one template image.',
-    phase: 'Phase 12',
-  },
   '/history': {
     description: 'Find, re-open and re-export past edit jobs.',
     phase: 'Phase 13',
@@ -82,6 +80,11 @@ function appRoutes(): RouteObject[] {
       path: '/editor/:jobId',
       handle: { title: 'Editor', fullBleed: true } satisfies RouteHandle,
       element: <EditorPage />,
+    },
+    {
+      path: '/batch/:batchId',
+      handle: { title: 'Batch' } satisfies RouteHandle,
+      element: <BatchPage />,
     },
     { path: '/profiles/:profileId', handle: profileHandle, element: <ProfileDetailPage /> },
     { path: '/profiles/:profileId/:tab', handle: profileHandle, element: <ProfileDetailPage /> },

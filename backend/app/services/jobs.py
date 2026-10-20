@@ -25,8 +25,15 @@ from app.core.clock import utcnow
 from app.core.config import Settings
 from app.core.errors import Conflict, ErrorCode, NotFound, ValidationFailed
 from app.core.pagination import decode_cursor
-from app.db.models import EditJob, StoredFile, Task
-from app.db.models.enums import FileKind, JobStatus, TaskStatus, TaskSubject, TaskType
+from app.db.models import Batch, EditJob, StoredFile, Task
+from app.db.models.enums import (
+    BatchStatus,
+    FileKind,
+    JobStatus,
+    TaskStatus,
+    TaskSubject,
+    TaskType,
+)
 from app.db.transaction import transaction
 from app.engine.geometry import is_valid_quad, order_quad
 from app.repositories import files as files_repo
@@ -408,6 +415,13 @@ def reopen(session: Session, owner_id: str, job_id: str) -> EditJobOut:
 def delete_job(session: Session, owner_id: str, job_id: str) -> None:
     with transaction(session):
         job = get_owned(session, owner_id, job_id)
+        if job.batch_id is not None:
+            batch = session.get(Batch, job.batch_id)
+            if batch is not None and batch.status in (
+                BatchStatus.QUEUED.value,
+                BatchStatus.RUNNING.value,
+            ):
+                raise Conflict("This item belongs to a batch that is still running")
         if job.status in (JobStatus.DETECTING.value, JobStatus.RENDERING.value):
             for task_type in (TaskType.DETECT, TaskType.RENDER):
                 task = repo.active_task(session, job.id, task_type)

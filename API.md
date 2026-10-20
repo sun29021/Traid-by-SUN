@@ -157,7 +157,6 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 | DELETE | `/profiles/{id}` | Permanent delete | Only archived profiles; body `{ "confirm_name": "<name>" }` must match; `409` if any batch is running or jobs reference it unless `?with_jobs=true` (deletes its jobs too). Audit `profile.deleted`. |
 | GET | `/profiles/{id}/coverage` | Coverage matrix | `[{ char, confirmed, auto, rejected, best_quality, ready }]` |
 | GET | `/profiles/{id}/learning` | What the profile learned | `{ accepted, rejected, acceptance_rate, learned_params, typical_region: { count, cx, cy, sx, sy, w, h } \| null, history: [{ date, accepted, rejected }×14] }` |
-| GET | `/profiles/{id}/learning` | Learning stats | Acceptance rate series (last 50 jobs), most-rejected glyphs, learned params. (Should) |
 
 ### 3.4 Reference images
 | Method | Path | Purpose | Notes |
@@ -195,7 +194,7 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 ### 3.7 Batches (Should)
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
-| POST | `/batches/validate` | Dry-run validation | `{ profile_id, values: [string ≤ 1000] }` → `{ valid: [], invalid: [{ value, code }], duplicates: [] }`. |
+| POST | `/batches/validate` | Dry-run validation | `{ profile_id, template_job_id?, values: [string ≤ 1000] }` → `{ valid: [], invalid: [{ value, code, message }], duplicates: [] }`. Values are trimmed, blank lines ignored; codes `CHAR_NOT_IN_CHARSET`, `PATTERN_MISMATCH` (strict), `GLYPH_MISSING` (no usable glyph and not in the template's old text), `VALIDATION_FAILED` (> 64 chars). |
 | POST | `/batches` | Create & start | `{ template_job_id, values: [1–1000 valid], name?, client_request_id? }`. Template must be `rendered` or `accepted`; its region and params are copied. → `202` `{ batch, task: Task(batch_run) }`. |
 | GET | `/batches` | List | Cursor-paginated. |
 | GET | `/batches/{id}` | Detail with counts | |

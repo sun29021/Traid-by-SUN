@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import io
 import re
+from dataclasses import dataclass
 from pathlib import PurePath
 
 import numpy as np
@@ -19,10 +20,11 @@ from sqlalchemy.orm import Session
 from app import __version__
 from app.core.clock import utcnow
 from app.core.errors import NotFound
+from app.db.models import EditJob
 from app.db.models.enums import FileKind, JobStatus, MimeType
 from app.db.transaction import transaction
 from app.engine.io import decode_image, encode_image
-from app.engine.types import ImageFormat
+from app.engine.types import DecodedImage, ImageFormat
 from app.repositories import files as files_repo
 from app.schemas.jobs import ExportOut, ExportRequest
 from app.services import app_settings, audit
@@ -73,48 +75,75 @@ def jpeg_quality(mode: str) -> int | None:
     return None
 
 
+@dataclass(frozen=True)
+class EncodedExport:
+    data: bytes
+    name: str
+    fmt: ImageFormat
+    decoded: DecodedImage
+    quality: int | None
+    marker: bool
+
+
+def encode_export(
+    session: Session,
+    store: FileStore,
+    job: EditJob,
+    *,
+    format_choice: str | None = None,
+    filename_pattern: str | None = None,
+) -> EncodedExport:
+    """The accepted job's result encoded like its input (shared by single and ZIP export)."""
+    if job.status != JobStatus.ACCEPTED.value:
+        raise InvalidState("Only accepted results can be exported")
+    source = files_repo.get(session, job.owner_id, job.input_file_id)
+    result = (
+        files_repo.get(session, job.owner_id, job.result_file_id) if job.result_file_id else None
+    )
+    if source is None or result is None:
+        raise NotFound("The job's files are missing")
+
+    decoded = decode_image(store.read_bytes(source.storage_path))
+    with Image.open(io.BytesIO(store.read_bytes(result.storage_path))) as image:
+        rendered = np.asarray(image.convert("RGB")).copy()
+
+    choice = format_choice or str(app_settings.get(session, "export.default_format"))
+    fmt: ImageFormat = decoded.format if choice == "original" else _FORMATS[choice]
+    quality = jpeg_quality(str(app_settings.get(session, "export.jpeg_quality_mode")))
+    marker = (
+        marker_text(job.engine_version)
+        if app_settings.get(session, "export.metadata_marker")
+        else None
+    )
+    data = encode_image(rendered, decoded, fmt=fmt, jpeg_quality=quality, marker=marker)
+    pattern = filename_pattern or str(app_settings.get(session, "export.filename_pattern"))
+    name = download_name(pattern, template=source.original_name, token=job.new_text, fmt=fmt)
+    return EncodedExport(data, name, fmt, decoded, quality, marker is not None)
+
+
 def export_job(
     session: Session, store: FileStore, owner_id: str, job_id: str, body: ExportRequest
 ) -> ExportOut:
     with transaction(session):
         job = get_owned(session, owner_id, job_id)
-        if job.status != JobStatus.ACCEPTED.value:
-            raise InvalidState("Only accepted results can be exported")
-        source = files_repo.get(session, owner_id, job.input_file_id)
-        result = (
-            files_repo.get(session, owner_id, job.result_file_id) if job.result_file_id else None
+        out = encode_export(
+            session, store, job, format_choice=body.format, filename_pattern=body.filename_pattern
         )
-        if source is None or result is None:
-            raise NotFound("The job's files are missing")
-
-        decoded = decode_image(store.read_bytes(source.storage_path))
-        with Image.open(io.BytesIO(store.read_bytes(result.storage_path))) as image:
-            rendered = np.asarray(image.convert("RGB")).copy()
-
-        choice = body.format or str(app_settings.get(session, "export.default_format"))
-        fmt: ImageFormat = decoded.format if choice == "original" else _FORMATS[choice]
-        quality = jpeg_quality(str(app_settings.get(session, "export.jpeg_quality_mode")))
-        marker = (
-            marker_text(job.engine_version)
-            if app_settings.get(session, "export.metadata_marker")
-            else None
-        )
-        data = encode_image(rendered, decoded, fmt=fmt, jpeg_quality=quality, marker=marker)
-        pattern = body.filename_pattern or str(app_settings.get(session, "export.filename_pattern"))
-        name = download_name(pattern, template=source.original_name, token=job.new_text, fmt=fmt)
         stored = store_generated_file(
             session,
             store,
             owner_id=owner_id,
-            data=data,
+            data=out.data,
             kind=FileKind.EXPORT,
-            mime_type=_MIME[fmt],
-            width=decoded.width,
-            height=decoded.height,
-            dpi=decoded.dpi,
-            has_icc=decoded.icc_profile is not None,
-            jpeg_quality_est=(quality or decoded.jpeg_quality_est) if fmt == "JPEG" else None,
-            original_name=name,
+            mime_type=_MIME[out.fmt],
+            width=out.decoded.width,
+            height=out.decoded.height,
+            dpi=out.decoded.dpi,
+            has_icc=out.decoded.icc_profile is not None,
+            jpeg_quality_est=(
+                (out.quality or out.decoded.jpeg_quality_est) if out.fmt == "JPEG" else None
+            ),
+            original_name=out.name,
         )
         job.exported_at = utcnow()
         audit.record(
@@ -122,6 +151,6 @@ def export_job(
             user_id=owner_id,
             action=AuditAction.JOB_EXPORTED,
             subject=("edit_job", job.id),
-            details={"format": fmt, "file_id": stored.id, "marker": marker is not None},
+            details={"format": out.fmt, "file_id": stored.id, "marker": out.marker},
         )
-    return ExportOut(file=file_ref(stored), download_name=name)
+    return ExportOut(file=file_ref(stored), download_name=out.name)

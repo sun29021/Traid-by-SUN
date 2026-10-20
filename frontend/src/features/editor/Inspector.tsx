@@ -289,6 +289,9 @@ export function Inspector(props: InspectorProps) {
                   Export
                 </Button>
                 <Button onClick={props.onReopen}>Edit again</Button>
+                {!job.batch_id && (
+                  <Link to={`/batch?template=${job.id}`}>Use as batch template</Link>
+                )}
               </div>
               {props.exported && (
                 <p className={styles.muted}>

@@ -227,6 +227,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** validation dry-run; idempotent create; cancel keeps finished items; ZIP naming collisions; Playwright 10-value batch.
 - **Done when:** 100-value fixture batch completes within throughput target and exports a correct ZIP.
+- **Status (2026-10-20): DONE.** The `batches` table arrived with migration `0005_edit_jobs` (12.1). `services/batches.py`: validation dry run, idempotent create (`client_request_id`), one running batch per owner, items as edit jobs copying the template's input/region/old text/adjustments/seed, `batch_run` reusing the cached removal through the shared `render_job` core (item failures do not stop the batch), cancel keeps finished items, accept-passed, `batch_export` ZIP with `_2` collision suffixes (short read sessions so progress writes never block on SQLite's single writer); deleting an item of a running batch is refused. UI `/batch` (steps, template choice, values textarea + CSV/TXT import, live validation, previous batches) and `/batch/:id` (progress + ETA, cancel, warnings-first grid, review drawer, accept all passed, export ZIP); Editor offers "Use as batch template". Tests: 6 API tests; Playwright 10-value batch with the real engine (≈ 0.6 s per item, well above the 6/min target).
 
 ## Phase 13 — History, settings, backup
 

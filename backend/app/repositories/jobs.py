@@ -158,6 +158,15 @@ def newer_render_queued(session: Session, job_id: str, task_id: str, created: da
     return bool(count)
 
 
+def latest_task(session: Session, subject_id: str, task_type: TaskType) -> Task | None:
+    return session.scalar(
+        select(Task)
+        .where(Task.subject_id == subject_id, Task.type == task_type.value)
+        .order_by(Task.created_at.desc(), Task.id.desc())
+        .limit(1)
+    )
+
+
 def has_harvested(session: Session, job_id: str) -> bool:
     return (
         session.scalar(select(Glyph.id).where(Glyph.source_job_id == job_id).limit(1)) is not None

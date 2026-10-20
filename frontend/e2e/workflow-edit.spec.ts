@@ -144,3 +144,42 @@ test('adjustments re-render and can be undone', async ({ page, request }) => {
   await page.keyboard.press('Control+z');
   await expect(page.getByText('1 changed')).toBeHidden();
 });
+
+test('a 10-value batch renders, accepts the passed items and exports a ZIP', async ({
+  page,
+  request,
+}) => {
+  test.setTimeout(240_000);
+  await readyProfile(request);
+  // The first test left an accepted edit to use as the template.
+  await page.goto('/batch');
+  await expect(page.getByLabel('Template edit')).toBeVisible();
+  const values = [
+    'A7-204193',
+    'A7-209413',
+    'A7-219403',
+    'A7-230419',
+    'A7-341920',
+    'A7-402913',
+    'A7-913024',
+    'A7-120394',
+    'A7-304921',
+    'A7-490213',
+  ];
+  await page.getByLabel(/Token values/).fill([...values, values[0]].join('\n'));
+  const check = page.getByRole('region', { name: 'Check' });
+  await expect(check).toContainText('Valid10');
+  await expect(check).toContainText('Duplicates (skipped)1');
+
+  await page.getByRole('button', { name: 'Run batch (10)' }).click();
+  await expect(page).toHaveURL(/\/batch\/[^/]+$/);
+  await expect(page.getByText('Completed', { exact: true })).toBeVisible({ timeout: 180_000 });
+  await expect(page.getByRole('list', { name: /Batch items/ }).getByRole('listitem')).toHaveCount(
+    10,
+  );
+
+  await page.getByRole('button', { name: /Accept all passed/ }).click();
+  await expect(page.getByText(/items accepted/)).toBeVisible();
+  await page.getByRole('button', { name: /Export accepted/ }).click();
+  await expect(page.getByText('The ZIP is ready.')).toBeVisible({ timeout: 60_000 });
+});

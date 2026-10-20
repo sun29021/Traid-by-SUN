@@ -42,3 +42,9 @@ export type ExportResult = Schemas['ExportOut'];
 export type GlyphVariant = Schemas['GlyphVariantOut'];
 export type Quad = number[][];
 export type Learning = Schemas['LearningOut'];
+
+export type Batch = Schemas['BatchOut'];
+export type BatchStatus = Batch['status'];
+export type BatchCounts = Schemas['BatchCounts'];
+export type BatchValidation = Schemas['BatchValidation'];
+export type BatchStarted = Schemas['BatchStarted'];

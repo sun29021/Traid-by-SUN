@@ -1,0 +1,227 @@
+/* Batch (DESIGN.md §11.6). */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.steps {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  flex: 1;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid var(--border-default);
+  color: var(--text-secondary);
+  counter-increment: step;
+}
+
+.steps li::before {
+  content: counter(step) '. ';
+}
+
+.steps li[data-active='true'] {
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+}
+
+.heading {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.label {
+  font-weight: 500;
+}
+
+.values {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  resize: vertical;
+}
+
+.values:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.importButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+
+.importButton:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.importButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.invalidList {
+  max-height: 240px;
+  margin: 0;
+  padding-left: var(--space-4);
+  overflow: auto;
+  color: var(--text-secondary);
+}
+
+.previous {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previous li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.previous a {
+  color: var(--accent);
+}
+
+.runHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.runHeader > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-1);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:hover {
+  border-color: var(--border-strong);
+}
+
+.item img,
+.placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--surface-2);
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+}
+
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.drawer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.drawer a {
+  color: var(--accent);
+}
+
+.compare {
+  margin: 0;
+}
+
+.compare img {
+  width: 100%;
+  border-radius: var(--radius-sm);
+}

@@ -19,4 +19,8 @@ export const queryKeys = {
   jobList: (filters: unknown) => ['jobs', 'list', filters] as const,
   job: (id: string) => ['jobs', id] as const,
   glyphVariants: (id: string, position: number) => ['jobs', id, 'variants', position] as const,
+
+  batches: ['batches'] as const,
+  batch: (id: string) => ['batches', id] as const,
+  batchItems: (id: string) => ['batches', id, 'items'] as const,
 };
