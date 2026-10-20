@@ -16,10 +16,20 @@ if (!container) {
 }
 
 const router = createBrowserRouter(routes);
+const queryClient = createQueryClient({
+  onAupRequired: () => {
+    const { pathname, search } = router.state.location;
+    if (pathname !== '/welcome') {
+      void router.navigate(`/welcome?next=${encodeURIComponent(pathname + search)}`, {
+        replace: true,
+      });
+    }
+  },
+});
 
 createRoot(container).render(
   <StrictMode>
-    <Providers client={createQueryClient()}>
+    <Providers client={queryClient}>
       <RouterProvider router={router} />
     </Providers>
   </StrictMode>,

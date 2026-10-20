@@ -1,0 +1,54 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: var(--control-md);
+  border-bottom: var(--border-width) solid var(--border-subtle);
+}
+
+.label {
+  color: var(--text-secondary);
+}
+
+.value {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.number {
+  font-family: var(--font-mono);
+}
+
+.unit {
+  color: var(--text-secondary);
+}
+
+.status {
+  display: inline-flex;
+}
+
+.status svg {
+  width: var(--icon-size);
+  height: var(--icon-size);
+}
+
+.pass {
+  color: var(--success);
+}
+
+.warn {
+  color: var(--warning);
+}
+
+.fail {
+  color: var(--danger);
+}

@@ -13,7 +13,7 @@ export interface NavItem {
   label: string;
   title: string;
   icon: LucideIcon;
-  /** Two-key shortcut from DESIGN.md §7 (wired up in Phase 3). */
+  /** Two-key shortcut from DESIGN.md §7, e.g. "G H". */
   shortcut: string;
 }
 
@@ -32,6 +32,11 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/history', label: 'History', title: 'History', icon: FolderClock, shortcut: 'G Y' },
   { path: '/settings', label: 'Settings', title: 'Settings', icon: Settings, shortcut: 'G S' },
 ];
+
+/** Second key of each "G X" shortcut → path, for useGoToShortcuts. */
+export const GO_TO_TARGETS: Record<string, string> = Object.fromEntries(
+  NAV_ITEMS.map((item) => [item.shortcut.split(' ')[1]?.toLowerCase() ?? '', item.path]),
+);
 
 export interface RouteHandle {
   title: string;

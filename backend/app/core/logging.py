@@ -42,11 +42,18 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, default=str, ensure_ascii=False)
 
 
+def close_log_handlers() -> None:
+    """Detach and close Traid's handlers (releases the log file, which Windows keeps locked)."""
+    root = logging.getLogger()
+    for handler in list(root.handlers):
+        root.removeHandler(handler)
+        handler.close()
+
+
 def configure_logging(settings: Settings) -> None:
     root = logging.getLogger()
     root.setLevel(settings.log_level)
-    for handler in list(root.handlers):
-        root.removeHandler(handler)
+    close_log_handlers()
 
     formatter = JsonFormatter()
 

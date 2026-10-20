@@ -21,6 +21,10 @@ try {
     Pop-Location
 }
 
+Invoke-Step 'api types up to date' {
+    powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'gen-api-types.ps1') -Check
+}
+
 Push-Location $FrontendDir
 try {
     Invoke-Step 'frontend: eslint' { npm run --silent lint }
@@ -32,3 +36,4 @@ try {
 }
 
 Write-Host '==> All checks passed'
+Write-Host '    (End-to-end browser tests are separate: cd frontend; npm run e2e)'

@@ -1,0 +1,47 @@
+.wrap {
+  position: relative;
+}
+
+.input {
+  padding-right: var(--space-8);
+  font-family: var(--font-mono);
+  font-size: var(--type-token-size);
+  line-height: var(--type-token-line);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--type-token-tracking);
+}
+
+.count {
+  position: absolute;
+  right: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--type-small-size);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+}
+
+.chip svg {
+  width: var(--space-3);
+  height: var(--space-3);
+}
+
+.pass {
+  background: var(--success-muted);
+  color: var(--success);
+}
+
+.fail {
+  background: var(--warning-muted);
+  color: var(--warning);
+}

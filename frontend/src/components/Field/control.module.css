@@ -1,0 +1,36 @@
+/* Shared look for text-like controls: TextField, Select, TokenInput, number inputs. */
+.control {
+  width: 100%;
+  height: var(--control-md);
+  padding: 0 var(--space-3);
+  background: var(--surface-2);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  transition: border-color var(--motion-fast) var(--ease-out);
+}
+
+.control::placeholder {
+  color: var(--text-tertiary);
+}
+
+.control:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.control:focus-visible {
+  border-color: var(--accent);
+}
+
+.control:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.large {
+  height: var(--control-lg);
+}

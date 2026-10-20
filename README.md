@@ -4,7 +4,7 @@
 
 Traid replaces a short printed token in a photo or scan with a new value so that the new characters match the real print. It reuses real glyphs from your own reference images and adapts them to each target image. Everything runs locally; images never leave your machine.
 
-> Status: **Phase 0 — project foundation.** Product features are built phase by phase (see `IMPLEMENTATION_PLAN.md`).
+> Status: **Phases 0–3 done** (foundation, database and worker, local-mode security, design system and Welcome screen). Product features are built phase by phase (see `IMPLEMENTATION_PLAN.md`).
 
 ## Project documents (source of truth)
 
@@ -48,7 +48,19 @@ powershell -ExecutionPolicy Bypass -File scripts\dev.ps1
 powershell -ExecutionPolicy Bypass -File scripts\check.ps1
 ```
 
-Runs ruff, ruff format, mypy (strict), pytest, ESLint, Prettier, TypeScript and Vitest. Every change must pass this before it is considered done.
+Runs ruff, ruff format, mypy (strict), pytest, the API-types freshness check, ESLint, Prettier, TypeScript and Vitest. Every change must pass this before it is considered done.
+
+End-to-end browser tests (production build + real backend on port 8766 with a throwaway data folder; uses your installed Google Chrome):
+
+```powershell
+cd frontend; npm run e2e
+```
+
+After changing any backend endpoint or schema, regenerate the frontend API types and commit the result:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\gen-api-types.ps1
+```
 
 ## Run the production build locally
 

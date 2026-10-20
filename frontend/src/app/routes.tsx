@@ -1,9 +1,13 @@
 import type { RouteObject } from 'react-router-dom';
 
+import { WelcomeGate } from '@/features/welcome/WelcomeGate';
+import { WelcomePage } from '@/features/welcome/WelcomePage';
+
 import { AppShell } from './AppShell';
 import { NAV_ITEMS, type RouteHandle } from './navigation';
 import { NotFoundPage } from './NotFoundPage';
 import { PlannedPage } from './PlannedPage';
+import { RouteErrorPage } from './RouteErrorPage';
 
 const PLANNED: Record<string, { description: string; phase: string }> = {
   '/': {
@@ -35,29 +39,46 @@ const PLANNED: Record<string, { description: string; phase: string }> = {
 
 export const routes: RouteObject[] = [
   {
-    element: <AppShell />,
+    path: '/welcome',
+    handle: { title: 'Welcome' } satisfies RouteHandle,
+    element: <WelcomePage />,
+    errorElement: <RouteErrorPage />,
+  },
+  {
+    element: <WelcomeGate />,
+    errorElement: <RouteErrorPage />,
     children: [
-      ...NAV_ITEMS.map((item): RouteObject => {
-        const planned = PLANNED[item.path];
-        const handle: RouteHandle = { title: item.title };
-        return {
-          path: item.path,
-          handle,
-          element: (
-            <PlannedPage
-              icon={item.icon}
-              title={item.title}
-              description={planned?.description ?? ''}
-              phase={planned?.phase ?? ''}
-            />
-          ),
-        };
-      }),
       {
-        path: '*',
-        handle: { title: 'Not found' } satisfies RouteHandle,
-        element: <NotFoundPage />,
+        element: <AppShell />,
+        errorElement: <RouteErrorPage />,
+        children: appRoutes(),
       },
     ],
   },
 ];
+
+function appRoutes(): RouteObject[] {
+  return [
+    ...NAV_ITEMS.map((item): RouteObject => {
+      const planned = PLANNED[item.path];
+      const handle: RouteHandle = { title: item.title };
+      return {
+        path: item.path,
+        handle,
+        element: (
+          <PlannedPage
+            icon={item.icon}
+            title={item.title}
+            description={planned?.description ?? ''}
+            phase={planned?.phase ?? ''}
+          />
+        ),
+      };
+    }),
+    {
+      path: '*',
+      handle: { title: 'Not found' } satisfies RouteHandle,
+      element: <NotFoundPage />,
+    },
+  ];
+}

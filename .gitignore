@@ -26,6 +26,7 @@ frontend/dist/
 frontend/src/lib/api/schema.d.ts.tmp
 frontend/test-results/
 frontend/playwright-report/
+frontend/.e2e-data/
 *.tsbuildinfo
 
 # OS / editors

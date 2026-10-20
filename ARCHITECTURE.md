@@ -53,7 +53,7 @@ Not used on purpose: Celery/Redis (single worker thread is enough), PyTorch (not
 ### 2.2 Frontend
 | Choice | Why |
 |--------|-----|
-| **React 18 + TypeScript (strict)** | Mature, typed, large component ecosystem. |
+| **React 18 + TypeScript (strict)** | Mature, typed, large component ecosystem. TypeScript is pinned to 5.x: tools such as `openapi-typescript` do not support TypeScript 6 yet (decision 2026-10-20). |
 | **Vite** | Fast dev server and build; proxy to backend in dev. |
 | **React Router** | Simple URL-driven routing (tabs and filters live in the URL). |
 | **TanStack Query** | Server state, caching, polling of tasks, retries. |
@@ -61,7 +61,8 @@ Not used on purpose: Celery/Redis (single worker thread is enough), PyTorch (not
 | **Zod** | Client-side form validation that mirrors API rules. |
 | **lucide-react** | The single icon set required by DESIGN.md. |
 | **@fontsource/ibm-plex-sans, @fontsource/ibm-plex-mono** | Bundled fonts for offline use. |
-| **Vitest + Testing Library**, **Playwright** | Unit/component tests and E2E. |
+| **Vitest + Testing Library**, **Playwright** (+ `@axe-core/playwright`) | Unit/component tests and E2E with accessibility scans. E2E uses the installed Google Chrome (`channel: chrome`) so no browser download is required. |
+| **openapi-typescript** (dev) | Generates `src/lib/api/schema.d.ts` from the backend's OpenAPI schema (`scripts/gen-api-types.ps1`); `scripts/check.ps1` fails when it is stale. |
 | **ESLint + Prettier** | Lint/format. |
 
 Canvas: native HTML Canvas 2D for the image + an SVG overlay layer in image coordinates for regions and handles. No canvas framework needed.

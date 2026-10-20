@@ -1,0 +1,32 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-primary);
+  font-size: var(--type-small-size);
+  line-height: var(--type-small-line);
+  white-space: nowrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--text-tertiary);
+}
+
+.success .dot {
+  background: var(--success);
+}
+
+.warning .dot {
+  background: var(--warning);
+}
+
+.danger .dot {
+  background: var(--danger);
+}
+
+.info .dot {
+  background: var(--info);
+}

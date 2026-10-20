@@ -84,6 +84,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 - **Depends on:** Phase 2 API.
 - **Tests:** primitive state/a11y tests; api client error mapping; Playwright: first run → Welcome → accept → Home; axe check on Welcome.
 - **Done when:** first run shows Welcome, then the app; all pages reachable as placeholders; no hard-coded style values (lint rule or review).
+- **Status (2026-10-20): DONE.** 21 primitives in `src/components` (Field, TextField, Select, Checkbox/Toggle, TokenInput, AdjustmentField, Button, IconButton, Tooltip, Badge, MetricRow, ProgressBar, Skeleton, Banner, Table, Tabs, Dialog/Drawer, Toast, DropZone, EmptyState); generated API types + `apiList`/`queryString`; AUP redirect via QueryCache; engine-offline banner; tasks chip; G-key shortcuts; route error page; Welcome page + gate with safe `next` redirect. 39 unit tests; 3 Playwright E2E tests with axe (0 serious/critical violations). TypeScript pinned to 5.x (see ARCHITECTURE §2.2). Shortcut sheet (`?`) and command palette remain "Should" items for later phases.
 
 ## Phase 4 — Engine I: image I/O, models, detection, geometry
 

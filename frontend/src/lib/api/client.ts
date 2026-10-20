@@ -59,7 +59,45 @@ function isErrorEnvelope(value: unknown): value is { error: ApiErrorBody } {
   );
 }
 
+export interface ListMeta {
+  next_cursor: string | null;
+  count: number;
+}
+
+export interface ListResult<T> {
+  items: T[];
+  meta: ListMeta;
+}
+
+/** `?a=1&b=x` from defined values only; '' when nothing is set. */
+export function queryString(params: Record<string, string | number | undefined | null>): string {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '') search.set(key, String(value));
+  }
+  const text = search.toString();
+  return text ? `?${text}` : '';
+}
+
+/** Single-resource endpoints: resolves to the envelope's `data`. */
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const payload = await send(path, options);
+  return payload?.data as T;
+}
+
+/** List endpoints: resolves to the items plus pagination `meta` (API.md §1.5). */
+export async function apiList<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<ListResult<T>> {
+  const payload = await send(path, options);
+  return { items: (payload?.data ?? []) as T[], meta: payload?.meta as ListMeta };
+}
+
+async function send(
+  path: string,
+  options: RequestOptions,
+): Promise<{ data: unknown; meta?: unknown } | undefined> {
   const method = options.method ?? 'GET';
   const headers: Record<string, string> = { Accept: 'application/json' };
   let body: BodyInit | undefined;
@@ -89,7 +127,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 
   if (response.status === 204) {
-    return undefined as T;
+    return undefined;
   }
 
   const payload: unknown = await response.json().catch(() => null);
@@ -105,9 +143,18 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     });
   }
 
-  return payload.data as T;
+  return payload;
 }
 
-function isDataEnvelope(value: unknown): value is { data: unknown } {
+function isDataEnvelope(value: unknown): value is { data: unknown; meta?: unknown } {
   return typeof value === 'object' && value !== null && 'data' in value;
+}
+
+/** True for the 403 the server sends until the Acceptable Use notice is acknowledged. */
+export function isAupRequired(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 403 &&
+    error.details?.['reason'] === 'aup_required'
+  );
 }
