@@ -1,0 +1,36 @@
+# Runtime data (images, database, backups, logs) — never commit
+data/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Models (downloaded by scripts/fetch_models.py)
+models/*.onnx
+models/**/*.onnx
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+frontend/src/lib/api/schema.d.ts.tmp
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/

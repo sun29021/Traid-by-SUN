@@ -1,0 +1,117 @@
+/*
+ * Design tokens — the only place raw values live (DESIGN.md §3–§5, §10).
+ * Components must reference these variables, never literal colours/sizes.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Surfaces — true neutral greys (R = G = B) */
+  --surface-0: #0e0e0e;
+  --surface-1: #161616;
+  --surface-2: #1e1e1e;
+  --surface-3: #272727;
+  --surface-4: #323232;
+  --border-subtle: #262626;
+  --border-default: #353535;
+  --border-strong: #4a4a4a;
+
+  /* Text */
+  --text-primary: #ededed;
+  --text-secondary: #a3a3a3;
+  --text-tertiary: #8a8a8a;
+  --text-on-accent: #1a1300;
+
+  /* Accent (proof-mark amber) */
+  --accent: #f2b33d;
+  --accent-hover: #f6c462;
+  --accent-pressed: #d99a22;
+  --accent-muted: #f2b33d29;
+
+  /* Semantic */
+  --success: #4cc38a;
+  --success-muted: #4cc38a29;
+  --warning: #f08c2e;
+  --warning-muted: #f08c2e29;
+  --danger: #f0524f;
+  --danger-muted: #f0524f29;
+  --info: #6aa8f0;
+  --info-muted: #6aa8f029;
+
+  /* Canvas overlays */
+  --ov-detected: #22d3ee;
+  --ov-selected: #f2b33d;
+  --ov-mask: #ff3daa73;
+  --ov-glyph: #a78bfa;
+  --ov-warning: #f08c2e;
+  --ov-outline: #00000099;
+  --backdrop-mid-grey: #808080;
+  --scrim: #00000099;
+
+  /* Typography */
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --type-display-size: 24px;
+  --type-display-line: 32px;
+  --type-title-size: 18px;
+  --type-title-line: 24px;
+  --type-heading-size: 15px;
+  --type-heading-line: 20px;
+  --type-body-size: 13px;
+  --type-body-line: 20px;
+  --type-small-size: 12px;
+  --type-small-line: 16px;
+  --type-micro-size: 11px;
+  --type-micro-line: 14px;
+  --type-micro-tracking: 0.04em;
+  --type-token-size: 20px;
+  --type-token-line: 28px;
+  --type-token-tracking: 0.06em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+
+  /* Spacing (4 px base) */
+  --space-0: 0;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Sizes */
+  --control-sm: 24px;
+  --control-md: 32px;
+  --control-lg: 40px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-full: 999px;
+  --border-width: 1px;
+  --icon-size: 16px;
+  --icon-size-nav: 20px;
+  --focus-ring: 0 0 0 2px var(--surface-0), 0 0 0 4px var(--accent);
+
+  /* Layout */
+  --nav-rail-width: 64px;
+  --top-bar-height: 48px;
+  --content-max-width: 1280px;
+
+  /* Motion */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 240ms;
+  --ease-out: ease-out;
+  --ease-emphasis: cubic-bezier(0.2, 0, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-base: 0ms;
+    --motion-slow: 0ms;
+  }
+}
