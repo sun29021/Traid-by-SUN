@@ -268,6 +268,8 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 | 15.2 | Blind-test kit: randomized real/edited pairs + simple scoring sheet. |
 | 15.3 | Demo script covering J2 → J3 → J4 → learning stats. |
 
+- **Status (2026-10-20): TOOLING READY; waiting for the owner's real photos.** `tests/eval/showcase_report.py` (PRD §18 criteria from the database, read-only; reports "not enough data" below the sample sizes), `tests/eval/blind_kit.py` (`make`: randomized left/right pairs of original vs. edited token areas from accepted edits + hidden answer key + viewer sheet; `score`: accuracy vs. the 60 % target and a binomial p-value against chance), `docs/DEMO.md` (10-minute J2 → J3 → J4 → learning script). Tested on a database produced through the API. To do with real photos: train profiles, make ≥ 100 edits, run both tools, hold the blind test.
+
 ---
 
 ## Dependency order

@@ -87,6 +87,10 @@ data/       runtime data: database, images, backups, logs (git-ignored)
 - **Back up:** Settings → Storage & backup → *Back up now*, or run `powershell -ExecutionPolicy Bypass -File scripts\backup.ps1` (works while Traid runs). Backups are ZIPs in `data\backups\` containing `traid.db`, `files\` and a `manifest.json`; each one is integrity-checked. Traid also backs up automatically before a database upgrade. Copy backups to an external drive yourself — Traid never uploads them.
 - **Restore:** stop Traid → rename `data` (for example to `data-old`) → create an empty `data` folder and unzip the backup into it → start Traid. Settings → Engine shows the database schema once it is running; older backups are upgraded automatically.
 
+## Showcase
+
+`docs/DEMO.md` is the demo script. After real use, `backend\tests\eval\showcase_report.py --data-dir ..\data` reports the PRD §18 success criteria and `backend\tests\eval\blind_kit.py` builds and scores the blind naturalness test.
+
 ## Data and privacy
 
 All data lives in `data/` (configurable with `TRAID_DATA_DIR`). It is git-ignored. Enabling Windows BitLocker on the drive that holds it is recommended.
