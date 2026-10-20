@@ -248,12 +248,14 @@ Export ─▶ GET /jobs/{id}/export ─▶ encoded file (format/DPI/ICC preserve
 | Choose token | Weighted score: regex match, Gaussian position prior from `typical_region`, glyph-style similarity, OCR confidence | Rule-based + learned stats |
 | Rectify | Homography from quad (OpenCV) | — |
 | Segment characters | Sauvola/Otsu binarization, connected components, merge/split guided by OCR char count and CTC positions | — |
-| Soft mask | Background estimate (inpainted) + ink colour estimate → alpha = clip((bg − I)/(bg − ink)) per channel-luminance | — |
+| Soft mask | **Ink mode:** background estimate (inpainted) + ink colour estimate → alpha = clip((bg − I)/(bg − ink)) per channel-luminance. **Relief mode:** binary glyph mask from segmentation, dilated to include the stroke's highlight/shadow rim; the RGB patch itself is kept as the glyph texture. | — |
 | Remove | Dilated union of glyph alphas → LaMa inpainting; OpenCV Telea fallback | ✅ ONNX |
 | Select glyphs | Same-image glyphs first; else bank glyphs ranked by condition similarity (cap height, stroke width, blur σ, background luminance, contrast, angle) × learned acceptance score | Learned stats |
 | Layout | Slot reuse for equal length; else alignment + pitch/advances from profile | — |
-| Harmonize | Scale to cap height; ink colour transfer; shading ratio from local background; Gaussian blur to match estimated σ; additive grain matched to measured noise σ; inverse warp | — |
-| Composite | Alpha composite, 2–4 px feather, hard mask enforcement | — |
+| Harmonize | Scale to cap height; **ink mode:** ink colour transfer + shading ratio from local background; **relief mode:** low-frequency illumination of the patch replaced by the target's local illumination (high-frequency material detail kept). Both: Gaussian blur to match estimated σ; additive grain matched to measured noise σ; inverse warp | — |
+| Composite | **Ink mode:** alpha composite, 2–4 px feather. **Relief mode:** gradient-domain (Poisson) blending via OpenCV `seamlessClone` (mixed gradients) inside the mask. Both: hard mask enforcement | — |
+
+The mode comes from the profile's `surface_type` (PRD FR-E15): `print`, `paint` → ink; `laser_mark`, `engraved` → relief. For relief profiles, glyph selection adds a lighting-direction term (dominant gradient angle of the stroke rim, stored per glyph) with double weight, because highlights/shadows on engraved strokes only look right when the light comes from the same side.
 | Encode | Same format; JPEG at estimated source quality | — |
 | Verify | OCR read-back (same OCR model), seam gradient score, inside/outside statistics | ✅ ONNX |
 
@@ -270,10 +272,14 @@ Traid learns by **curating and ranking real data** and **adapting defaults** —
 - Fine-tune an open scene-text-editing diffusion model (LoRA) on GPU with PyTorch in a separate `training/` package (not loaded by the app).
 - Export to ONNX and plug in as `GenerativeSynthesizer`; MVP verify stage stays as the gatekeeper.
 - Requires: CUDA GPU ≥ 12 GB VRAM, owner approval, separate dependency group.
+- **Owner hardware note:** the RTX 3050 Laptop GPU has 4 GB VRAM — enough for MVP inference, **not** enough to fine-tune a diffusion model locally. Phase 2 would need a rented cloud GPU for training (inference could then run locally only for a small exported model). Decision deferred until Phase 2 is proposed.
 
 ### 10.4 Model management
 - `models/manifest.json`: name, version, file, sha256, license, source URL.
 - `engine/models.py` verifies checksum at first load, picks device: `TRAID_DEVICE=auto` → DirectML/CUDA if available, else CPU; records device in `/system/status`.
+- **Owner hardware (PRD D-09):** dual-GPU laptop (NVIDIA RTX 3050 Laptop 4 GB + AMD Radeon integrated). Use **`onnxruntime-directml`** (no CUDA toolkit/cuDNN install needed). DirectML adapter numbering does not always match Task Manager, so `TRAID_GPU_DEVICE_ID=auto` picks the adapter with the most dedicated video memory (the NVIDIA GPU); an explicit index overrides it. Settings → Engine shows the chosen adapter's name. Added in Phase 4 (task 4.3).
+- VRAM budget (4 GB): LaMa runs on a crop around the token (≤ 1024 px side) and OCR on a downscaled copy for detection, so peak VRAM stays well under 2 GB. If a GPU run fails with out-of-memory, the stage retries once on CPU and reports it in the quality report.
+- Performance targets are measured on AC power; on battery Windows throttles the dGPU and Traid may pick the integrated GPU.
 
 ---
 
@@ -333,6 +339,7 @@ Loaded by `pydantic-settings` from environment and `.env` (never committed). All
 | `TRAID_DATA_DIR` | `./data` | DB, files, backups, logs |
 | `TRAID_MODEL_DIR` | `./models` | ONNX models + manifest |
 | `TRAID_DEVICE` | `auto` | `auto` / `cpu` / `directml` / `cuda` |
+| `TRAID_GPU_DEVICE_ID` | `auto` | GPU adapter for DirectML/CUDA: `auto` (most dedicated VRAM) or an index. Added in Phase 4. |
 | `TRAID_MAX_UPLOAD_MB` | `50` | Per-file upload limit |
 | `TRAID_MAX_PIXELS` | `40000000` | Decompression-bomb guard |
 | `TRAID_SESSION_IDLE_HOURS` | `12` | Idle timeout |

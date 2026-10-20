@@ -80,7 +80,7 @@ Clients poll `GET /tasks/{id}` (recommended 500 ms) until `succeeded | failed | 
 **Profile**
 ```json
 { "id": "…", "name": "Receipt Token A", "description": null,
-  "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/# ", "token_pattern": "^[A-Z]\\d-\\d{6}$", "pattern_strict": false,
+  "surface_type": "print", "charset": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/# ", "token_pattern": "^[A-Z]\\d-\\d{6}$", "pattern_strict": false,
   "alignment": "auto", "spacing_mode": "auto", "ready_threshold": 3, "use_auto_glyphs": false, "engine": "glyph_transplant",
   "status": "ready", "coverage": { "ready_chars": 37, "total_chars": 40, "missing": ["Q","X","#"] },
   "stats": { "glyphs_confirmed": 412, "glyphs_auto": 37, "references": 38, "jobs_accepted": 51, "acceptance_rate": 0.86 },
@@ -139,7 +139,7 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 | Method | Path | Purpose | Notes |
 |--------|------|---------|-------|
 | GET | `/profiles` | List | Filters: `archived=false|true|all` (default false), `q` (name contains). Order `updated_at DESC`. |
-| POST | `/profiles` | Create | Body: `name` (req), `description`, `charset`, `token_pattern`, `pattern_strict`, `alignment`, `spacing_mode`, `ready_threshold`, `use_auto_glyphs`. `409` on duplicate name. `422 INVALID_PATTERN`. |
+| POST | `/profiles` | Create | Body: `name` (req), `surface_type` (req: `print`/`paint`/`laser_mark`/`engraved`), `description`, `charset`, `token_pattern`, `pattern_strict`, `alignment`, `spacing_mode`, `ready_threshold`, `use_auto_glyphs`. `409` on duplicate name. `422 INVALID_PATTERN`. |
 | GET | `/profiles/{id}` | Detail | Includes `status`, `coverage`, `stats`. |
 | PATCH | `/profiles/{id}` | Update | Any create field. Archived profiles → `409 PROFILE_ARCHIVED` except unarchive. |
 | POST | `/profiles/{id}/archive` | Archive | Idempotent. |
@@ -262,7 +262,7 @@ Implemented in-process (token bucket in memory) — no external store.
 ## 7. Environment variables
 
 Server-side only (see ARCHITECTURE.md §12 for defaults):
-`TRAID_ENV`, `TRAID_HOST`, `TRAID_PORT`, `TRAID_DATA_DIR`, `TRAID_MODEL_DIR`, `TRAID_DEVICE`, `TRAID_MAX_UPLOAD_MB`, `TRAID_MAX_PIXELS`, `TRAID_SESSION_IDLE_HOURS`, `TRAID_SESSION_MAX_DAYS`, `TRAID_LOG_LEVEL`, `TRAID_DEV_PASSWORD` (dev seed only; refused in production).
+`TRAID_ENV`, `TRAID_HOST`, `TRAID_PORT`, `TRAID_DATA_DIR`, `TRAID_MODEL_DIR`, `TRAID_DEVICE`, `TRAID_GPU_DEVICE_ID` (Phase 4), `TRAID_MAX_UPLOAD_MB`, `TRAID_MAX_PIXELS`, `TRAID_SESSION_IDLE_HOURS`, `TRAID_SESSION_MAX_DAYS`, `TRAID_LOG_LEVEL`, `TRAID_DEV_PASSWORD` (dev seed only; refused in production).
 
 Frontend (build-time, public): `VITE_API_BASE`. **No secret may ever be exposed through a `VITE_` variable.**
 

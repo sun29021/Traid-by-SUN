@@ -83,9 +83,9 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 
 | Task | Detail |
 |------|--------|
-| 4.1 | `tests/fixtures/generate.py`: synthetic token images with ground truth (quad, text, blur, noise, JPEG quality). |
+| 4.1 | `tests/fixtures/generate.py`: synthetic token images with ground truth (quad, text, blur, noise, JPEG quality) for every surface type: ink on paper, paint on a wall-like texture, laser mark and embossed/engraved text on brushed-metal and plastic textures (relief simulated with a height map + directional light). |
 | 4.2 | `engine/io.py`: decode/encode preserving ICC + DPI; JPEG quality estimate. |
-| 4.3 | `models/manifest.json` + `scripts/fetch_models.py` (checksums) + `engine/models.py` (lazy sessions, device select, CPU fallback). |
+| 4.3 | `models/manifest.json` + `scripts/fetch_models.py` (checksums) + `engine/models.py` (lazy sessions, device select, CPU fallback). Use `onnxruntime-directml`; add `TRAID_GPU_DEVICE_ID` (auto = adapter with most dedicated VRAM, i.e. the RTX 3050 on the owner's laptop); OOM on GPU retries once on CPU. |
 | 4.4 | `engine/detect.py` (RapidOCR) → `Region` list; fake detector adapter for fast tests. |
 | 4.5 | `engine/geometry.py` rectify/inverse warp. |
 | 4.6 | `GET /system/status` (models, device, queue, disk). |
@@ -101,7 +101,7 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 |------|--------|
 | 5.1 | Migration `0003_profiles_references_glyphs`: `profiles`, `reference_images`, `glyphs`. |
 | 5.2 | Profiles service + API (CRUD, archive, delete with confirm, derived status, coverage). Regex validation for `token_pattern`. |
-| 5.3 | `engine/segment.py` (char boxes, baseline, cap height, pitch) and `engine/matte.py` (soft alpha). |
+| 5.3 | `engine/segment.py` (char boxes, baseline, cap height, pitch) and `engine/matte.py` (ink mode: soft alpha; relief mode: rim-dilated mask + texture patch + lighting direction). Migration adds `profiles.surface_type` and `glyphs.light_dir_deg`. |
 | 5.4 | `extract_glyphs` task handler: detect → filter by charset → rectify → segment → matte → glyph rows + PNG crops; per-reference status/error; known-text alignment (S). |
 | 5.5 | References API (upload multi-file with dedupe, list, patch known_text, re-extract, delete) and glyph API (list/filter, patch, bulk). |
 
@@ -143,8 +143,8 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 |------|--------|
 | 8.1 | `engine/glyph_select.py` (same-image first, bank ranking incl. learned score; `GLYPH_MISSING`). |
 | 8.2 | `engine/layout.py` (slot reuse; alignment/spacing modes). |
-| 8.3 | `engine/harmonize.py` (scale, ink colour, shading transfer, blur match, seeded grain). |
-| 8.4 | `engine/composite.py` (feathered alpha, hard mask enforcement). |
+| 8.3 | `engine/harmonize.py` (scale, ink colour, shading transfer, blur match, seeded grain; relief mode: low-frequency illumination swap). |
+| 8.4 | `engine/composite.py` (ink mode: feathered alpha; relief mode: Poisson `seamlessClone`; both: hard mask enforcement). Tests cover every surface type. |
 | 8.5 | `engine/verify.py` (OCR read-back, seam score, inside/outside stats → QualityReport). |
 | 8.6 | `engine/pipeline.py` with `Synthesizer` interface + `GlyphTransplantSynthesizer`; artefact caching contract. |
 | 8.7 | `tests/eval` harness producing CSV/HTML metrics report. |

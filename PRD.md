@@ -10,7 +10,7 @@
 
 ## 1. Summary
 
-Traid is a focused desktop-class application that replaces a short printed text string (a "token": e.g. `A7-204913`) inside a photo or scan with a new string, so that the new characters match the original font, ink, texture, lighting, blur, perspective and noise of that exact image.
+Traid is a focused desktop-class application that replaces a short text string (a "token") inside a photo or scan with a new string, so that the new characters match the original font, ink or marking, material texture, lighting, blur, perspective and noise of that exact image. A token can be anything short and single-line on a flat surface: a serial like `A7-204913` printed on paper, a word on a page, painted lettering on a wall, or a laser marking or engraving on metal or plastic.
 
 It is **not** a general photo editor. It does one job: *find the token, remove it cleanly, re-print a new token in the same style, and let the user verify the result.*
 
@@ -57,7 +57,8 @@ Assumption **A-01:** MVP is single-user on one Windows PC. Multi-user is out of 
 
 | Term | Meaning |
 |------|---------|
-| **Token** | The short printed string to be replaced (letters, digits, separators). |
+| **Token** | The short, single-line text to be replaced, on any flat surface: printed, painted, laser-marked or engraved. "Token" is the product's word for it, not a specific document type. |
+| **Surface type** | How the text was made: `print` (ink/toner on paper, labels), `paint` (painted or stencilled lettering, e.g. on walls), `laser_mark` (colour-change marking on metal/plastic), `engraved` (cut, embossed or debossed text with visible depth). It selects the blending mode (§8.1, FR-E15). |
 | **Target image** | The image containing the existing token that will be replaced. |
 | **Style Profile** ("profile") | A trained style for one token design: its glyph bank, character set, token pattern, layout rules and learned adjustments. |
 | **Reference image** | A real image of the same token design uploaded to train a profile. |
@@ -79,7 +80,7 @@ Assumption **A-01:** MVP is single-user on one Windows PC. Multi-user is out of 
 4. Owner lands on Home with an empty state that points to "Create your first Style Profile".
 
 ### J2 — Train a Style Profile
-1. Owner creates a profile: name, character set (default `0–9 A–Z -`), optional token pattern (e.g. `^[A-Z]\d-\d{6}$`).
+1. Owner creates a profile: name, surface type, character set (choose a preset — digits, uppercase + digits, full Latin letters + digits + common punctuation — or type a custom set), optional token pattern (e.g. `^[A-Z]\d-\d{6}$`).
 2. Owner drags in many reference images (different angles, lighting, textures).
 3. Traid detects text in every image, segments individual characters, and extracts each as a glyph with a soft mask.
 4. Owner opens the **Glyph Review** grid: glyphs are grouped by character; low-confidence ones are flagged. Owner confirms, relabels or rejects with keyboard shortcuts.
@@ -136,7 +137,7 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 | US-13 | Review glyphs: confirm, relabel, reject, in bulk, by keyboard. | M | Grid grouped by character; filter by status/quality; multi-select; shortcuts documented in DESIGN.md. |
 | US-14 | See character coverage and what is missing. | M | Matrix of characters with counts and quality; "Ready" rule visible. |
 | US-15 | Optionally provide the known text of a reference image to improve labels. | S | When provided, labels come from known text alignment instead of OCR guess. |
-| US-16 | Set layout rules: alignment, spacing mode, token pattern. | M | Defaults: alignment auto, spacing auto, no pattern. |
+| US-16 | Set surface type and layout rules: alignment, spacing mode, token pattern. | M | Surface type required at creation (changeable later); defaults: alignment auto, spacing auto, no pattern. |
 
 ### Editing
 | ID | Story | Pri | Acceptance criteria |
@@ -195,6 +196,7 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 | FR-E12 | **Quality report**: (a) OCR read-back of the result region must equal the new token; (b) seam score along mask boundary; (c) noise σ, sharpness and colour statistics inside vs. surrounding ring; each → pass / warn with numeric value. | M |
 | FR-E13 | **Determinism**: same input + parameters + engine version + seed → identical output. | M |
 | FR-E14 | **Engine interface** is swappable so a future generative engine (Phase 2) can be added without changing the API or UI. | M |
+| FR-E15 | **Surface-aware blending.** `print` and `paint` profiles use the **ink** model (soft alpha matte, ink colour and shading transfer). `laser_mark` and `engraved` profiles use the **relief** model: the glyph is transplanted as a texture patch with gradient-domain (Poisson) blending so material grain, highlights and shadows carry over and adapt to local lighting; glyph selection weights lighting-direction similarity higher. | M |
 
 ### 8.2 Profiles & learning
 
@@ -224,7 +226,7 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 | Area | Requirement |
 |------|-------------|
 | **Platform** | Windows 10/11 x64 (primary). The UI runs in a modern Chromium-based browser or Firefox against a local server on `127.0.0.1`. |
-| **Reference hardware** (Assumption **A-02**, confirm in D-09) | 4+ core CPU, 16 GB RAM, optional NVIDIA/AMD/Intel GPU. GPU is optional; CPU must be fully supported. |
+| **Reference hardware** (owner's PC, D-09) | ASUS TUF Gaming A15 laptop: AMD Ryzen 7 4800H (8 cores / 16 threads), 16 GB RAM, NVIDIA GeForce RTX 3050 Laptop GPU (4 GB) + AMD Radeon integrated GPU, NVMe SSD, Windows 11. Targets are measured on AC power (battery mode throttles the GPU). CPU-only must still be fully supported. |
 | **Performance (CPU)** | Detection ≤ 4 s on a 12 MP image; full render ≤ 10 s; re-render after an adjustment ≤ 3 s (cached removal & detection); glyph extraction ≤ 3 s per reference image. |
 | **Performance (GPU)** | Full render ≤ 4 s. |
 | **Batch throughput** | ≥ 6 results/minute on CPU for same-template batches (removal reused across items). |
@@ -295,7 +297,7 @@ Detailed schema lives in DATABASE.md. The product needs to persist:
 |--------|----------|-----------|
 | User | username, password hash, role, lockout state | Until deleted |
 | Session | hashed token, expiry | Purged after expiry |
-| Style Profile | name, charset, pattern, layout rules, thresholds, learned params, typical region | Until permanently deleted |
+| Style Profile | name, surface type, charset, pattern, layout rules, thresholds, learned params, typical region | Until permanently deleted |
 | Reference image | file, known text, extraction status, estimated capture conditions | With profile |
 | Glyph | character, soft-mask crop, metrics, quality, status, learning counters, source | With profile |
 | Edit job | input/result/mask files, regions, old/new text, parameters, quality report, status, engine version, seed | Until deleted by owner |
@@ -347,7 +349,7 @@ No webhooks, payments, email or third-party accounts.
 
 ## 16. MVP scope
 
-**In MVP (Must):** J1, J2, J3, J5; US marked **M**; FR-E01…E14, FR-P01…P05, FR-U01, FR-U03…U06; local owner account; audit log; export with metadata marker; dark UI.
+**In MVP (Must):** J1, J2, J3, J5; US marked **M**; FR-E01…E15, FR-P01…P05, FR-U01, FR-U03…U06; local owner account; audit log; export with metadata marker; dark UI.
 
 **MVP if time allows (Should):** Batch (J4), glyph variant swap, undo/redo, known-text labels, glyph candidates from targets, learning stats view, backup/restore.
 
@@ -355,7 +357,7 @@ No webhooks, payments, email or third-party accounts.
 
 - General photo editing (crop, filters, layers, brushes, retouching beyond the token region).
 - Fonts the owner has not trained (no generic font rendering).
-- Handwriting, non-Latin scripts, lowercase (unless approved in D-07), curved/circular text.
+- Handwriting as a quality goal (it may work, best effort only), non-Latin scripts, multi-line text, text on curved/cylindrical surfaces or along circular paths.
 - Generative AI engine / model fine-tuning / synthetic dataset generation (Phase 2).
 - Multiple users, roles beyond Owner, cloud sync, hosting, mobile apps.
 - PDF/vector input (raster images only).
@@ -380,8 +382,8 @@ No webhooks, payments, email or third-party accounts.
 | ID | Assumption |
 |----|-----------|
 | A-01 | Single owner, single Windows PC. |
-| A-02 | Mid-range laptop/desktop; GPU optional. |
-| A-03 | Tokens are short (≤ 24 chars), single-line, printed (not handwritten), mostly flat or gently angled surfaces. |
+| A-02 | Owner's laptop (see §9 reference hardware); GPU used when available, CPU always supported. |
+| A-03 | Tokens are short (≤ 64 chars), single-line, machine-made (print, paint/stencil, laser mark, engraving), on flat or gently angled surfaces. One profile covers one text style on one surface type. |
 | A-04 | Owner can supply ≥ 30 real reference images per token design, covering every character at least 3 times. |
 | A-05 | Owner is authorized to produce and edit the documents/images involved (their own job materials). |
 | A-06 | Input is photos or scans in JPEG/PNG/TIFF (8-bit). |
@@ -389,7 +391,7 @@ No webhooks, payments, email or third-party accounts.
 
 ## 20. Decisions requiring owner approval
 
-**Status: all decisions D-01…D-10 APPROVED as recommended by the owner on 2026-10-20.** D-09 hardware details are still to be provided; performance targets stay provisional until then.
+**Status: all decisions D-01…D-10 APPROVED as recommended by the owner on 2026-10-20.** Same day the owner provided the hardware (D-09 resolved) and clarified that tokens can be any short text on any surface, which updated D-07 (character set) and added surface types (FR-E15).
 
 | ID | Decision | Recommendation (approved) |
 |----|----------|----------------|
@@ -399,15 +401,15 @@ No webhooks, payments, email or third-party accounts.
 | D-04 | MVP engine = real-glyph transplant + classical/AI harmonization; generative AI engine deferred to Phase 2. | Approve. It is more reliable for a single known font and runs on CPU. |
 | D-05 | Batch mode in MVP as "Should". | Approve. |
 | D-06 | Exports carry an invisible Traid edit marker in file metadata (on by default, owner-switchable) + audit log always on. | Approve. |
-| D-07 | Character set: `0–9`, `A–Z`, `-`, `/`, `#`, space. Lowercase? | Approve set; tell us if lowercase is needed. |
+| D-07 | Character set is per profile. Presets: digits; uppercase + digits; full Latin (A–Z, a–z, 0–9, space and common punctuation). Custom sets allowed. New-profile default: uppercase + digits + `-/#` + space. | Approved (updated 2026-10-20 after owner clarification). |
 | D-08 | Dark-only UI in MVP (neutral grey for accurate image judgement). | Approve. |
-| D-09 | Reference hardware: share your PC's CPU, RAM and GPU. | Needed to confirm performance targets. |
+| D-09 | Reference hardware. | Resolved: Ryzen 7 4800H, 16 GB RAM, RTX 3050 Laptop 4 GB (+ AMD iGPU). Engine uses the NVIDIA GPU via DirectML (ARCHITECTURE.md §10.4). |
 | D-10 | Input formats JPEG/PNG/TIFF; max 50 MB / 40 MP. | Approve. |
 
 ## 21. Open questions
 
-1. What kind of document carries the tokens (e.g. queue slips, event passes, product labels)? This affects defaults (pattern, layout, typical texture).
-2. Are target images mostly phone photos or flatbed scans?
-3. Roughly how many reference images exist today, and do they cover every character?
-4. Is the token always in the same position on the page (template-like) or anywhere?
+1. ~~What kind of document carries the tokens?~~ **Answered 2026-10-20:** anything — print on paper, painted text on walls, laser marking/engraving on metal or plastic. Handled by surface types (FR-E15).
+2. Are target images mostly phone photos or flatbed scans? (Walls and metal parts suggest phone photos; the engine assumes photos by default.)
+3. Reference images: the owner will provide them near the end. Until then the engine is built and tested on synthetic fixtures. **Risk:** tuning on real images happens late; a small early sample (5–10 images per surface type) would de-risk Phases 7–8.
+4. Is the token always in the same position (template-like) or anywhere? Assumed **anywhere**; the learned typical position only helps when it is consistent.
 5. What is the university showcase date? It drives which "Should" items are realistic.

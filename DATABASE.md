@@ -91,7 +91,8 @@ Constraints: UNIQUE (`owner_id`, `sha256`, `kind`) — dedupe per kind.
 | owner_id | TEXT | no | — | FK → users.id ON DELETE RESTRICT |
 | name | TEXT | no | — | 1–60 chars; UNIQUE (`owner_id`, `name`) |
 | description | TEXT | yes | — | ≤ 500 chars |
-| charset | TEXT | no | `'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/# '` | 1–96 unique printable chars |
+| surface_type | TEXT | no | `'print'` | CHECK in (`print`, `paint`, `laser_mark`, `engraved`); selects ink vs relief blending (PRD FR-E15) |
+| charset | TEXT | no | `'0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-/# '` | 1–96 unique printable chars. UI presets (digits / uppercase + digits / full Latin) only fill this field; no separate preset column |
 | token_pattern | TEXT | yes | — | Regex, ≤ 200 chars, compiled & validated on write |
 | pattern_strict | INTEGER | no | 0 | 1 = mismatching tokens are rejected |
 | alignment | TEXT | no | `'auto'` | CHECK in (`auto`, `left`, `center`, `right`) |
@@ -140,6 +141,7 @@ Constraints: UNIQUE (`profile_id`, `file_id`) — same image cannot be added twi
 | bg_luma | REAL | no | — | 0–1 |
 | contrast | REAL | no | — | 0–1 |
 | angle_deg | REAL | no | — | −90…90 |
+| light_dir_deg | REAL | yes | — | 0…360, dominant lighting direction on the stroke rim; set for relief profiles (`laser_mark`, `engraved`), NULL otherwise |
 | ocr_confidence | REAL | no | — | 0–1 |
 | quality_score | REAL | no | — | 0–1 (sharpness, completeness, isolation) |
 | use_count | INTEGER | no | 0 | CHECK ≥ 0 |

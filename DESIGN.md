@@ -332,7 +332,7 @@ Rules:
 - Empty state (no profiles): drop zone replaced by guided card "1. Create a Style Profile · 2. Upload references · 3. Drop a target image".
 
 ### 11.3 Profiles list
-- Table: name, status badge, glyphs (confirmed/total), coverage %, acceptance rate, last used, actions. Toggle "Show archived". Primary: "New profile" (dialog: name, description, charset preset, pattern).
+- Table: name, status badge, glyphs (confirmed/total), coverage %, acceptance rate, last used, actions. Toggle "Show archived". Primary: "New profile" (dialog: name, surface type, description, charset preset, pattern). Surface type is a 4-option segmented control with a one-line hint each: *Print* (ink or toner on paper/labels) · *Paint* (painted or stencilled, e.g. walls) · *Laser mark* (colour-change marking on metal/plastic) · *Engraved* (cut or embossed, visible depth). The profiles table shows surface type as a neutral chip.
 
 ### 11.4 Profile detail
 - Header: name, status badge, actions (Test in editor, Archive). Tabs below.
@@ -340,7 +340,7 @@ Rules:
 - **References**: drop zone strip at top; grid of thumbnails with status (processing, processed n glyphs, failed + reason); click opens drawer with image and detected characters overlaid; optional known-text field.
 - **Glyphs**: left filter column (200 px: character list with counts, status filter, quality slider); main grid of glyph tiles grouped by character with sticky group headers; bulk action bar appears at bottom when selection > 0 (Confirm · Reject · Relabel…).
 - **Coverage**: grid of coverage cells for the charset; legend; Ready rule text ("Needs ≥ 3 confirmed glyphs per character").
-- **Settings**: form (charset, token pattern + strict toggle, alignment, spacing mode, ready threshold, use auto glyphs toggle).
+- **Settings**: form (surface type, charset, token pattern + strict toggle, alignment, spacing mode, ready threshold, use auto glyphs toggle).
 
 ### 11.5 Editor (full-bleed)
 ```
