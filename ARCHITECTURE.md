@@ -264,16 +264,30 @@ When enabled, the design below applies on top of 7.1 without changing data owner
 | Segment characters | Strip = detected box padded by 25 % of its height. Ink map = absolute difference between the strip and a large median filter (Otsu threshold; one polarity for ink, both for relief). Components → column groups (horizontal overlap merges dots/accents), reconciled with the label count (merge fragments, split plausible touching pairs near the middle), mapped left to right. CTC positions only guide splits. Spaces are never inferred from gaps (measured unreliable) | — |
 | Soft mask | **Ink mode:** background estimate (inpainted) + ink colour estimate → alpha = clip((bg − I)/(bg − ink)) per channel-luminance. **Relief mode:** binary glyph mask from segmentation, dilated to include the stroke's highlight/shadow rim; the RGB patch itself is kept as the glyph texture. | — |
 | Remove | Dilated union of glyph alphas (3 px) on a crop with context. **Hybrid, chosen by measurement (see below):** OpenCV Telea fill on plain surfaces; LaMa when long edges run into the mask (a rule, border or pattern crossing the token). Every fill gets a per-channel grain top-up so its fine-noise σ matches the ring around it; feathered blend; pixels outside the feather are never changed | ✅ ONNX (LaMa) |
-| Select glyphs | Same-image glyphs first; else bank glyphs ranked by condition similarity (cap height, stroke width, blur σ, background luminance, contrast, angle) × learned acceptance score | Learned stats |
-| Layout | Slot reuse for equal length; else alignment + pitch/advances from profile | — |
-| Harmonize | Scale to cap height; **ink mode:** ink colour transfer + shading ratio from local background; **relief mode:** low-frequency illumination of the patch replaced by the target's local illumination (high-frequency material detail kept). Both: Gaussian blur to match estimated σ; additive grain matched to measured noise σ; inverse warp | — |
-| Composite | **Ink mode:** alpha composite, 2–4 px feather. **Relief mode:** gradient-domain (Poisson) blending via OpenCV `seamlessClone` (mixed gradients) inside the mask. Both: hard mask enforcement | — |
+| Select glyphs | Same-image glyphs first; else bank glyphs ranked by condition similarity exp(−½Σ(Δ/tolerance)²) over cap-height ratio, stroke/cap, blur σ (after scaling), background luminance, contrast, angle (+ light direction ×2 for relief) × learned acceptance factor × (0.5 + 0.5·quality). Same-image crops come from an unreviewed segmentation, so a crop with an implausible box size, or one the reviewed bank recognises as a different character (32×32 alpha-template correlation), is not reused. Repeated characters use different real samples when an equivalent one exists | Learned stats |
+| Layout | **Slots** when length and space positions match: only the changed characters are removed and re-rendered, every unchanged character keeps the camera's own pixels. Falls back to **relayout** when a new glyph would come closer than 0.35 × the usual letter gap to a neighbour, or the segmentation around a changed slot is implausible. Relayout: anchor left (auto), centre or right; monospace pitch when centre spacing varies < 8 %, else measured gaps; space = 0.36 × cap height | — |
+| Harmonize | Each glyph becomes an **optical-density layer** D = −ln(glyph ÷ glyph's own inpainted background). **Ink mode:** coverage = ΣD ÷ ΣD_solid keeps the real ink texture; colour comes from the target ink's per-channel density (so a glyph learned in blue paint renders correctly in red). **Relief mode:** signed density (highlights and shadows) scaled to the target's density spread. Both: scaled to the target cap height, blur topped up to the target σ, weight = fractional dilate/erode, sub-pixel placement | — |
+| Composite | result = cleaned background × exp(−D). Only the density layer is warped from strip to image space (over its bounding box), so the photo's background is never resampled and local shading/illumination of the target applies automatically. Ink grain topped up to the original ink's measured grain. Hard enforcement: pixels outside removal mask + feather + glyph support are copied from the original | — |
 
 The mode comes from the profile's `surface_type` (PRD FR-E15): `print`, `paint` → ink; `laser_mark`, `engraved` → relief. For relief profiles, glyph selection adds a lighting-direction term (dominant gradient angle of the stroke rim, stored per glyph) with double weight, because highlights/shadows on engraved strokes only look right when the light comes from the same side.
 | Encode | Same format; JPEG at estimated source quality | — |
-| Verify | OCR read-back (same OCR model), seam gradient score, inside/outside statistics | ✅ ONNX |
+| Verify | `ocr_readback` (same OCR on a crop around the region; pass = equal ignoring spaces, warn ≥ 0.5 similarity, else fail), `seam` (gradient energy just inside the changed area's edge ÷ just outside − 1, glyph edges excluded; warn > 0.35), `noise` (grain inside ÷ around; warn outside 0.7–1.4), `sharpness` (new minus original edge blur, same measurement on both; warn > 0.6 px), `colour` (ΔE76 new vs original ink, warn > 10; relief: relative contrast change, warn > 0.35), `outside_unchanged` (fail if any pixel outside the changed mask differs). Overall = worst | ✅ ONNX |
 
 Determinism: all random operations (grain) use a seed stored on the job.
+
+**Why density transfer instead of alpha compositing / Poisson blending** (decided in Phase 8): alpha compositing needs a separate ink colour and loses the ink's own texture; Poisson (`seamlessClone`) bleeds the source patch's mean colour across the mask and must run in rectified space, which resamples untouched background. The density model is the physics of ink and engraving on a surface (reflectance multiplies), keeps the glyph's real texture, takes illumination from the target and touches only the glyph's pixels.
+
+**Synthesis measurements** (Phase 8, `tests/eval/run_eval.py`, 5 fixture photos × 5 new tokens per surface, bank from 10 reviewed reference fixtures, CPU, real PP-OCR read-back):
+
+| Surface | Pass / warn / fail | OCR read-back | Seam (median) | Render time (median) |
+|---------|--------------------|---------------|---------------|----------------------|
+| print | 25 / 0 / 0 | 100 % | 0.08 | 0.69 s |
+| paint | 25 / 0 / 0 | 100 % | 0.02 | 0.63 s |
+| laser_mark | 25 / 0 / 0 | 100 % | 0.00 | 0.61 s |
+| engraved | 21 / 4 / 0 | 88 % | 0.00 | 0.63 s |
+| **all** | **96 / 4 / 0** | **97 %** | 0.01 | 0.64 s |
+
+Known limit: engraved segmentation (box IoU median 0.77) is the weakest stage; read-back misses on engraved come from merged or split bevelled strokes. To be re-measured on the owner's real photos (Phase 15).
 
 **Text removal measurements** (Phase 7, fixtures rendered with and without ink so the true background is known; structure error = mean |low-pass difference| in grey levels inside the mask, texture ratio = fine-grain σ of the fill ÷ the true background's, 1.0 is ideal):
 

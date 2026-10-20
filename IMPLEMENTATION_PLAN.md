@@ -164,6 +164,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** determinism (same seed → identical bytes); OCR read-back on fixtures ≥ 98%; no system-font path exists; outside-mask unchanged; timing budget smoke test.
 - **Done when:** eval harness on fixtures meets thresholds; owner reviews a sample of real-image results.
+- **Status (2026-10-20): DONE (fixtures; owner's real-image review pending until the photos arrive).** `glyph_select.py`, `layout.py`, `harmonize.py`, `composite.py`, `verify.py`, `pipeline.py` (`Synthesizer` protocol, `GlyphTransplantSynthesizer`, `RenderParams` with API ranges, in-process removal cache keyed by region + removed slots + seed), `tests/fixtures/bank.py`, `tests/eval/run_eval.py` (CSV + HTML). Decisions (ARCHITECTURE §10.1): optical-density transfer instead of alpha/Poisson compositing; equal-length edits replace only the changed characters; unreviewed same-image crops are checked against the reviewed bank. Glyph crops now record their baseline (`baseline_y`; stored from Phase 9). Fixture eval: 96/100 pass, OCR read-back 97 % (100 % print/paint/laser, 88 % engraved), median 0.64 s per render on CPU.
 
 ## Phase 9 — Edit jobs backend
 

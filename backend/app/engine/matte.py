@@ -55,6 +55,7 @@ class GlyphCrop:
     box: tuple[int, int, int, int]  # crop extent in strip coordinates (x0, y0, x1, y1)
     metrics: GlyphMetrics
     confidence: float  # recogniser confidence for this character position
+    baseline_y: float  # text baseline in crop coordinates (px from the crop's top edge)
 
 
 def _luma(rgb: NDArray[Any]) -> NDArray[np.float32]:
@@ -181,6 +182,7 @@ def extract_glyphs(strip: RGBImage, segmentation: Segmentation, mode: BlendMode)
                     clipped=box.x0 == 0 or box.y0 == 0 or box.x1 == width or box.y1 == height,
                 ),
                 confidence=box.confidence,
+                baseline_y=round(float(segmentation.baseline) - y0, 2),
             )
         )
     return crops

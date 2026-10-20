@@ -37,6 +37,7 @@ class GlyphCandidate:
     metrics: GlyphMetrics
     ocr_confidence: float
     angle_deg: float
+    baseline_y: float  # text baseline inside the crop (px from its top)
 
 
 @dataclass(frozen=True, eq=False)
@@ -136,6 +137,7 @@ def extract_from_image(
                     metrics=crop.metrics,
                     ocr_confidence=float(np.clip(crop.confidence, 0.0, 1.0)),
                     angle_deg=angle,
+                    baseline_y=crop.baseline_y,
                 )
             )
 
