@@ -134,6 +134,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** GlyphGrid keyboard interactions; form validation; Playwright: create profile → upload fixtures → confirm glyphs → profile Ready.
 - **Done when:** a fixture profile can be trained to Ready purely through the UI.
+- **Status (2026-10-20): DONE.** Profiles list + create dialog (surface picker, charset presets, pattern), profile detail with URL tabs (`/profiles/:id/:tab`): Overview with next-step guidance, References (multi-file drop, extraction progress via `useTask`, cards, drawer with known text / re-extract / delete), Glyphs (filter column, grouped keyboard-reviewable listbox, bulk bar), Coverage matrix, Settings (all fields, archive/restore, typed-name delete). 50 unit tests; Playwright trains a profile to Ready with the real models and axe finds no serious violations on any profile screen. Decisions: Delete (not X) rejects glyphs; glyph checkerboard follows the original surface brightness; draft status shown as "Not ready".
 
 ## Phase 7 — Engine II: text removal
 

@@ -95,6 +95,7 @@ Line style differs per meaning (dashed / solid / dotted) so overlays remain dist
 ### 3.5 Canvas backdrop
 - Default backdrop is `--surface-0`.
 - Optional backdrop toggle: mid-grey `#808080` and checkerboard (for viewing glyph alpha). Never coloured.
+- Glyph tiles use a checkerboard whose brightness follows the glyph's original background (`bg_luma ≥ 0.5` → light checker `--checker-light-*`, else dark `--checker-dark-*`), because glyph RGB is the real ink: dark ink on a dark checker is invisible.
 
 ---
 
@@ -311,7 +312,7 @@ Rules:
 | Undo / redo adjustments | — | `Ctrl+Z` / `Ctrl+Shift+Z` |
 
 ### 10.2 Glyph review interactions
-- Arrow keys move selection in grid; `Enter` confirm; `X` reject; type a character to relabel; `Shift+click` range select; `Ctrl+A` select all in group; `Space` large preview.
+- Arrow keys move focus in the grid; `Space` toggles selection; `Enter` confirms; `Delete`/`Backspace` rejects; typing a character relabels; `Shift+click` range-selects, `Ctrl+click` toggles; `Ctrl+A` selects all visible; `Esc` clears. Actions apply to the selection, or to the focused glyph when nothing is selected. (Changed from `X` = reject: `X` is a real character in many character sets, so typing it must relabel.)
 
 ### 10.3 Drag and drop
 - Whole Home and Editor canvas accept file drops. Profile References tab accepts multi-file drops. Invalid file type during drag shows "Not supported" in the drop zone before release.

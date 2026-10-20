@@ -1,0 +1,244 @@
+.layout {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: var(--space-5);
+  padding-bottom: var(--space-8);
+}
+
+@media (max-width: 1023px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------------------------------------------------------------- filters */
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.filterGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.filterButton,
+.charButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  height: var(--control-sm);
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.filterButton[aria-pressed='true'],
+.charButton[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+  color: var(--text-primary);
+}
+
+.charList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.charButton {
+  width: 100%;
+}
+
+.charLabel {
+  font-family: var(--font-mono);
+  font-weight: var(--weight-medium);
+  color: var(--text-primary);
+}
+
+.charCounts {
+  font-family: var(--font-mono);
+  font-size: var(--type-small-size);
+}
+
+.autoCount {
+  color: var(--warning);
+}
+
+/* ---------------------------------------------------------------- grid */
+
+.main {
+  min-width: 0;
+}
+
+.help {
+  margin-bottom: var(--space-3);
+  color: var(--text-tertiary);
+  font-size: var(--type-small-size);
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.groupHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-1) 0;
+  background: var(--surface-0);
+  color: var(--text-secondary);
+  font-size: var(--type-small-size);
+  font-weight: var(--weight-regular);
+}
+
+.groupChar {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--type-title-size);
+  font-weight: var(--weight-medium);
+}
+
+.tiles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 88px;
+  padding: var(--space-3) var(--space-1) var(--space-2);
+  border: var(--border-width) solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  /* Checkerboard so glyph transparency is visible (DESIGN.md §3.5). Its brightness
+     follows the glyph's original background so dark ink stays visible. */
+  --checker-a: var(--checker-dark-a);
+  --checker-b: var(--checker-dark-b);
+  background-color: var(--checker-b);
+  background-image:
+    linear-gradient(45deg, var(--checker-a) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker-a) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker-a) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker-a) 75%);
+  background-size: 12px 12px;
+  background-position:
+    0 0,
+    0 6px,
+    6px -6px,
+    -6px 0;
+  cursor: pointer;
+}
+
+.tile[data-backdrop='light'] {
+  --checker-a: var(--checker-light-a);
+  --checker-b: var(--checker-light-b);
+}
+
+.tile[data-backdrop='light'] .tileChar {
+  color: var(--surface-4);
+}
+
+.tile[data-status='confirmed'] {
+  border-color: var(--success);
+}
+
+.tile[data-status='rejected'] {
+  border-style: dashed;
+  border-color: var(--danger);
+  opacity: 0.45;
+}
+
+.tile[aria-selected='true'] {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.tile:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
+.tileChar {
+  position: absolute;
+  top: 2px;
+  left: var(--space-1);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--type-small-size);
+}
+
+.crop {
+  max-width: 100%;
+  max-height: 60px;
+  object-fit: contain;
+  image-rendering: auto;
+}
+
+.quality {
+  position: absolute;
+  left: var(--space-1);
+  right: var(--space-1);
+  bottom: var(--space-1);
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--surface-4);
+  overflow: hidden;
+}
+
+.qualityFill {
+  display: block;
+  height: 100%;
+  background: var(--text-secondary);
+}
+
+/* ---------------------------------------------------------------- bulk bar */
+
+.bulkBar {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-5);
+  z-index: 20;
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  transform: translateX(-50%);
+}
+
+.bulkBar > span {
+  align-self: center;
+  margin-right: var(--space-2);
+  font-family: var(--font-mono);
+}
+
+.relabel {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  width: 220px;
+}

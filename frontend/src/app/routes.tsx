@@ -1,5 +1,8 @@
+import type { ReactNode } from 'react';
 import type { RouteObject } from 'react-router-dom';
 
+import { ProfileDetailPage } from '@/features/profiles/ProfileDetailPage';
+import { ProfilesPage } from '@/features/profiles/ProfilesPage';
 import { WelcomeGate } from '@/features/welcome/WelcomeGate';
 import { WelcomePage } from '@/features/welcome/WelcomePage';
 
@@ -8,6 +11,11 @@ import { NAV_ITEMS, type RouteHandle } from './navigation';
 import { NotFoundPage } from './NotFoundPage';
 import { PlannedPage } from './PlannedPage';
 import { RouteErrorPage } from './RouteErrorPage';
+
+/** Sections that are built; the rest show a "planned" placeholder. */
+const BUILT: Record<string, ReactNode> = {
+  '/profiles': <ProfilesPage />,
+};
 
 const PLANNED: Record<string, { description: string; phase: string }> = {
   '/': {
@@ -18,10 +26,6 @@ const PLANNED: Record<string, { description: string; phase: string }> = {
   '/editor': {
     description: 'Detect the token, type the new value, generate, review and export.',
     phase: 'Phase 10',
-  },
-  '/profiles': {
-    description: 'Train Style Profiles from real reference images and review their glyphs.',
-    phase: 'Phase 6',
   },
   '/batch': {
     description: 'Apply a list of token values to one template image.',
@@ -58,6 +62,7 @@ export const routes: RouteObject[] = [
 ];
 
 function appRoutes(): RouteObject[] {
+  const profileHandle: RouteHandle = { title: 'Style Profiles' };
   return [
     ...NAV_ITEMS.map((item): RouteObject => {
       const planned = PLANNED[item.path];
@@ -65,7 +70,7 @@ function appRoutes(): RouteObject[] {
       return {
         path: item.path,
         handle,
-        element: (
+        element: BUILT[item.path] ?? (
           <PlannedPage
             icon={item.icon}
             title={item.title}
@@ -75,6 +80,8 @@ function appRoutes(): RouteObject[] {
         ),
       };
     }),
+    { path: '/profiles/:profileId', handle: profileHandle, element: <ProfileDetailPage /> },
+    { path: '/profiles/:profileId/:tab', handle: profileHandle, element: <ProfileDetailPage /> },
     {
       path: '*',
       handle: { title: 'Not found' } satisfies RouteHandle,

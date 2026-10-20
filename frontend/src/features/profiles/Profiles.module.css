@@ -1,0 +1,60 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.lead {
+  max-width: 64ch;
+  color: var(--text-secondary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.skeletons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.nameCell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.name {
+  font-weight: var(--weight-medium);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  height: var(--control-sm);
+  padding: 0 var(--space-2);
+  border: var(--border-width) solid var(--border-default);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: var(--type-small-size);
+}
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.mono {
+  font-family: var(--font-mono);
+}

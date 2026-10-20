@@ -45,6 +45,11 @@
   --ov-warning: #f08c2e;
   --ov-outline: #00000099;
   --backdrop-mid-grey: #808080;
+  /* Glyph checkerboards: light for glyphs from light surfaces, dark for dark ones. */
+  --checker-light-a: #d4d4d4;
+  --checker-light-b: #ebebeb;
+  --checker-dark-a: #1e1e1e;
+  --checker-dark-b: #272727;
   --scrim: #00000099;
 
   /* Typography */

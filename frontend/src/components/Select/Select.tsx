@@ -14,8 +14,8 @@ export interface SelectOption {
 export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
   label: string;
   options: readonly SelectOption[];
-  helper?: string;
-  error?: string;
+  helper?: string | undefined;
+  error?: string | undefined;
 }
 
 /** Native select: keyboard search and accessibility come for free (DESIGN.md §6.2). */

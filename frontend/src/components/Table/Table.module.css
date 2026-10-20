@@ -37,6 +37,9 @@
 
 .end {
   text-align: right !important;
+}
+
+td.end {
   font-family: var(--font-mono);
 }
 

@@ -19,7 +19,7 @@ export interface TokenInputProps extends Omit<
   /** The profile's character set; characters outside it are flagged. */
   charset: string;
   pattern?: string | null | undefined;
-  helper?: string;
+  helper?: string | undefined;
 }
 
 /** Mono token entry with live charset and pattern feedback (DESIGN.md §6.2). */

@@ -6,8 +6,8 @@ import control from '../Field/control.module.css';
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label: string;
-  helper?: string;
-  error?: string;
+  helper?: string | undefined;
+  error?: string | undefined;
   size?: 'md' | 'lg';
 }
 
