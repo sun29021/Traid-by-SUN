@@ -99,9 +99,29 @@ class Conflict(AppError):
     code = ErrorCode.CONFLICT
 
 
+class PayloadTooLarge(AppError):
+    http_status = 413
+    code = ErrorCode.UPLOAD_TOO_LARGE
+
+
+class UnsupportedMediaType(AppError):
+    http_status = 415
+    code = ErrorCode.UNSUPPORTED_MEDIA_TYPE
+
+
 class ValidationFailed(AppError):
     http_status = 422
     code = ErrorCode.VALIDATION_FAILED
+
+
+class TooManyRequests(AppError):
+    http_status = 429
+    code = ErrorCode.RATE_LIMITED
+
+
+class StorageFailure(AppError):
+    http_status = 500
+    code = ErrorCode.STORAGE_ERROR
 
 
 class EngineUnavailable(AppError):

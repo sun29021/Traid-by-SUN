@@ -245,7 +245,7 @@ PK (`job_id`, `position`). Rows are replaced on every render.
 | details | TEXT (JSON) | no | Non-sensitive context (IDs, counts, format). Never passwords, tokens, CSRF secrets. |
 | created_at | TIMESTAMP | no | |
 
-Triggers: `BEFORE UPDATE` and `BEFORE DELETE` on `audit_events` → `RAISE(ABORT, 'audit_events is append-only')`.
+Triggers: `BEFORE UPDATE` and `BEFORE DELETE` on `audit_events` → `RAISE(ABORT, 'audit_events is append-only')`. The one permitted update is the foreign-key action `ON DELETE SET NULL` clearing `user_id` when a user is deleted (every other column must be unchanged); otherwise the FK rule and the trigger would contradict each other.
 
 ### 3.12 `app_settings`
 | Column | Type | Null | Notes |

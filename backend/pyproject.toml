@@ -10,6 +10,9 @@ dependencies = [
     "uvicorn",
     "pydantic",
     "pydantic-settings",
+    "sqlalchemy>=2.1.5",
+    "alembic>=1.20.0",
+    "pillow>=13.0.0",
 ]
 
 [dependency-groups]
@@ -35,7 +38,9 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "A", "C4", "SIM", "RUF", "S", "PTH
 ignore = ["N818"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101"]
+"tests/**" = ["S101", "S106"]  # asserts; dummy password hashes
+# Revision files are named 0001_*.py by design.
+"app/migrations/versions/*" = ["N999"]
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -45,6 +50,9 @@ ban-relative-imports = "all"
 python_version = "3.11"
 strict = true
 files = ["app"]
+# Revision files start with digits (not importable module names); they are checked by ruff and
+# by tests/unit/db/test_migrations.py, which compares them against the ORM models.
+exclude = ["app/migrations/versions/"]
 plugins = ["pydantic.mypy"]
 
 [tool.pydantic-mypy]

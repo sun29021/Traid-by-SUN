@@ -45,6 +45,7 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 - **Depends on:** Phase 0.
 - **Tests:** config validation; error envelope shapes; migration up/down on temp DB; audit trigger blocks UPDATE/DELETE; file store dedupe + traversal guard + bad-file rejection; worker claim/cancel/recovery.
 - **Done when:** app starts with migrations applied, logs in JSON, rejects non-local Host headers; all tests pass.
+- **Status (2026-10-20): DONE.** Migrations `0001_initial_auth`, `0002_files_tasks`; file storage + upload validation (`storage/`, `services/files.py`); task queue (`worker/queue.py`) + single-thread runner (`worker/runner.py`, handler registry empty until Phase 5); Host guard, CSP and security headers. No new HTTP endpoints: `/tasks/*` and upload endpoints need authentication, so they arrive with Phase 2 and Phase 5 per API.md. Deferred to 13.3: automatic pre-migration backup. Dev seed data (DATABASE.md §10) needs profiles, so it arrives in Phase 5.
 
 ## Phase 2 — Authentication & audit
 
