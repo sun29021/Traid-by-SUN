@@ -20,6 +20,7 @@ from app.schemas.profiles import (
     CoverageItem,
     GlyphBulk,
     GlyphOut,
+    LearningOut,
     ProfileCreate,
     ProfileDelete,
     ProfileOut,
@@ -28,6 +29,7 @@ from app.schemas.profiles import (
     ReferenceUpload,
 )
 from app.services import glyphs as glyphs_service
+from app.services import learning
 from app.services import profiles as profiles_service
 from app.services import references as references_service
 from app.storage.filestore import FileStore
@@ -98,6 +100,15 @@ def delete_profile(
     """Permanently delete an archived profile. `confirm_name` must equal its name."""
     profiles_service.delete_profile(session, user.id, profile_id, body.confirm_name)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/{profile_id}/learning", response_model=DataEnvelope[LearningOut])
+def get_learning(
+    profile_id: str, user: AcceptedUserDep, session: SessionDep
+) -> DataEnvelope[LearningOut]:
+    """Acceptance stats, learned starting adjustments and typical token position."""
+    profile = profiles_service.get_owned(session, user.id, profile_id)
+    return DataEnvelope(data=LearningOut.model_validate(learning.summary(session, profile)))
 
 
 @router.get("/{profile_id}/coverage", response_model=DataEnvelope[list[CoverageItem]])

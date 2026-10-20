@@ -25,7 +25,7 @@ from numpy.typing import NDArray
 from app.engine.composite import Composite, composite
 from app.engine.detect import TextDetector
 from app.engine.extract import STRIP_PADDING, line_angle
-from app.engine.geometry import clip_quad, expand_quad, order_quad, rectify
+from app.engine.geometry import clip_quad, expand_quad, order_quad, rectify, transform_points
 from app.engine.glyph_select import (
     SMALL_CHARS,
     Choice,
@@ -248,6 +248,18 @@ def prepare_region(
             angle_deg=angle,
             baseline_y=c.baseline_y,
             source="same_image",
+            source_quad=transform_points(
+                np.array(
+                    [
+                        [c.box[0], c.box[1]],
+                        [c.box[2], c.box[1]],
+                        [c.box[2], c.box[3]],
+                        [c.box[0], c.box[3]],
+                    ],
+                    dtype=np.float32,
+                ),
+                rect.to_image,
+            ),
         )
         for c in crops
     )

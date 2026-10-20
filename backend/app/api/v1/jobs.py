@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated
 
@@ -33,10 +34,11 @@ from app.schemas.tasks import TaskOut
 from app.services import export as export_service
 from app.services import jobs as jobs_service
 from app.services import profiles as profiles_service
-from app.services.job_engine import JobDeps, glyph_variants, read_region_text
+from app.services.job_engine import JobDeps, glyph_variants, harvest_glyphs, read_region_text
 from app.storage.filestore import FileStore
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
+logger = logging.getLogger("traid.api.jobs")
 
 FileStoreDep = Annotated[FileStore, Depends(get_file_store)]
 
@@ -189,8 +191,17 @@ def get_glyph_variants(
 
 
 @router.post("/{job_id}/accept", response_model=DataEnvelope[EditJobOut])
-def accept(job_id: str, user: AcceptedUserDep, session: SessionDep) -> DataEnvelope[EditJobOut]:
-    return DataEnvelope(data=jobs_service.accept(session, user.id, job_id))
+def accept(
+    job_id: str, user: AcceptedUserDep, session: SessionDep, deps: JobDepsDep
+) -> DataEnvelope[EditJobOut]:
+    """Accept the render: learning update + audit; the job's original characters become
+    glyph candidates for review."""
+    job = jobs_service.accept(session, user.id, job_id)
+    try:
+        harvest_glyphs(deps, job_id)
+    except Exception:  # harvesting is a bonus; the accept already succeeded
+        logger.exception("Glyph harvest failed", extra={"job_id": job_id})
+    return DataEnvelope(data=job)
 
 
 @router.post("/{job_id}/reject", response_model=DataEnvelope[EditJobOut])

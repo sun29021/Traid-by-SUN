@@ -52,6 +52,7 @@ class GlyphSample:
     glyph_id: str | None = None  # bank glyphs only
     accept_count: int = 0
     reject_count: int = 0
+    source_quad: NDArray[np.float32] | None = None  # crop corners in its source image
 
 
 @dataclass(frozen=True)

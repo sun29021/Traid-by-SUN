@@ -3,11 +3,14 @@
 import io
 from typing import Any
 
+import cv2
 import numpy as np
 import pytest
 from PIL import Image
 
 from app.db.models import AppSetting, Glyph
+from app.engine.extract import STRIP_PADDING
+from app.engine.geometry import clip_quad, expand_quad, rectify
 from tests.factories import png_bytes
 from tests.fixtures.generate import make_token_image
 from tests.integration.conftest import Studio
@@ -394,3 +397,99 @@ def test_relief_and_ink_profiles_render(studio: Studio, surface: str) -> None:
     studio.run_tasks()
 
     assert _job(studio, job_id)["status"] == "rendered"
+
+
+# ---------------------------------------------------------------- learning (Phase 11)
+
+
+def _accept_with(studio: Studio, profile_id: str, params: dict[str, Any]) -> dict[str, Any]:
+    job = _detected(studio, profile_id)
+    studio.client.post(
+        f"/api/v1/jobs/{job['id']}/render", json={"new_text": "A7-204914", "params": params}
+    )
+    studio.run_tasks()
+    response = studio.client.post(f"/api/v1/jobs/{job['id']}/accept")
+    assert response.status_code == 200, response.text
+    data: dict[str, Any] = response.json()["data"]
+    return data
+
+
+def test_accepts_teach_starting_adjustments_and_position(studio: Studio) -> None:
+    profile = _ready_profile(studio)
+    for _ in range(3):
+        _accept_with(studio, profile["id"], {"dx": 4, "ink_tone": 0.5})
+
+    learning = studio.client.get(f"/api/v1/profiles/{profile['id']}/learning").json()["data"]
+    assert learning["accepted"] == 3 and learning["acceptance_rate"] == 1.0
+    assert learning["learned_params"]["dx"] == pytest.approx(4 * (1 - 0.8**3), abs=1e-3)
+    assert learning["typical_region"]["count"] == 3
+    assert 0.3 < learning["typical_region"]["cx"] < 0.7
+    assert sum(day["accepted"] for day in learning["history"]) == 3
+
+    detail = studio.client.get(f"/api/v1/profiles/{profile['id']}").json()["data"]
+    assert detail["stats"]["jobs_accepted"] == 3
+    assert detail["learned_params"]["dx"] > 0
+
+    # The next job starts from what was learned.
+    fresh = _create_job(studio, profile["id"], seed=12)
+    assert fresh["job"]["params"]["dx"] == pytest.approx(learning["learned_params"]["dx"], abs=1e-3)
+    assert fresh["job"]["params"]["ink_tone"] > 0
+
+
+def test_accepted_jobs_add_their_original_characters_for_review(studio: Studio) -> None:
+    profile = _ready_profile(studio)
+    before = studio.client.get(f"/api/v1/profiles/{profile['id']}/glyphs?limit=200").json()
+    job = _accept_with(studio, profile["id"], {})
+
+    after = studio.client.get(f"/api/v1/profiles/{profile['id']}/glyphs?limit=200").json()
+    harvested = [g for g in after["data"] if g["source"]["type"] == "job"]
+
+    assert len(after["data"]) > len(before["data"])
+    assert {g["source"]["id"] for g in harvested} == {job["id"]}
+    assert all(g["status"] == "auto" for g in harvested)
+    assert "".join(sorted(g["char"] for g in harvested)) == "".join(sorted(TOKEN.replace(" ", "")))
+
+    # Crops come from the input photo, never from the result: the harvested "3" (the
+    # character this edit replaced) is found in the original strip (up to warp rounding),
+    # not in the result.
+    original = make_token_image(TOKEN, "print", seed=8).image
+    result = np.asarray(
+        Image.open(io.BytesIO(_download(studio, job["result"]["url"]))).convert("RGB")
+    )
+    quad = np.asarray(job["selected_quad"], dtype=np.float32)
+    strip_quad = clip_quad(expand_quad(quad, STRIP_PADDING), original.shape[1], original.shape[0])
+    three = next(g for g in harvested if g["char"] == "3")
+    crop = np.asarray(Image.open(io.BytesIO(_download(studio, three["crop_url"]))))[..., :3]
+
+    def best_match(image: np.ndarray) -> float:
+        strip = rectify(image, strip_quad).patch
+        scores = cv2.matchTemplate(strip.astype(np.float32), crop.astype(np.float32), cv2.TM_SQDIFF)
+        return float(scores.min())
+
+    in_original, in_result = best_match(original), best_match(result)
+    assert in_original / crop.size < 0.05  # mean squared difference per value
+    assert in_result > 100 * in_original
+
+    # Accepting again does not harvest twice.
+    studio.client.post(f"/api/v1/jobs/{job['id']}/accept")
+    again = studio.client.get(f"/api/v1/profiles/{profile['id']}/glyphs?limit=200").json()
+    assert len(again["data"]) == len(after["data"])
+
+
+def test_rejections_push_a_glyph_down_the_ranking(studio: Studio) -> None:
+    profile = _ready_profile(studio)
+    job = _rendered(studio, profile["id"], "ZX-58")
+    first = studio.client.get(f"/api/v1/jobs/{job['id']}/glyph-variants?position=0").json()["data"]
+    top = first[0]["glyph_id"]
+
+    studio.client.post(f"/api/v1/jobs/{job['id']}/reject", json={})
+    db = studio.client.app.state.db  # type: ignore[attr-defined]
+    with db.session() as session:
+        glyph = session.get(Glyph, top)
+        assert glyph is not None
+        glyph.reject_count = 5
+
+    later = studio.client.get(f"/api/v1/jobs/{job['id']}/glyph-variants?position=0").json()["data"]
+    if len(later) > 1:
+        assert later[0]["glyph_id"] != top
+    assert next(v for v in later if v["glyph_id"] == top)["score"] < first[0]["score"]

@@ -41,3 +41,4 @@ export type ExportRequest = Schemas['ExportRequest'];
 export type ExportResult = Schemas['ExportOut'];
 export type GlyphVariant = Schemas['GlyphVariantOut'];
 export type Quad = number[][];
+export type Learning = Schemas['LearningOut'];

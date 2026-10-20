@@ -100,8 +100,8 @@ Constraints: UNIQUE (`owner_id`, `sha256`, `kind`) — dedupe per kind.
 | ready_threshold | INTEGER | no | 3 | CHECK 1–20 confirmed glyphs per char |
 | use_auto_glyphs | INTEGER | no | 0 | 1 = allow high-confidence unreviewed glyphs in renders |
 | engine | TEXT | no | `'glyph_transplant'` | CHECK in (`glyph_transplant`) — Phase 2 adds `generative` |
-| learned_params | TEXT (JSON) | no | `'{}'` | EMA of accepted adjustments, e.g. `{"blur_delta":0.21,"grain_scale":1.08}` |
-| typical_region | TEXT (JSON) | yes | — | `{"cx":0.62,"cy":0.18,"w":0.21,"h":0.04,"var":{…},"n":37}` normalized to image size |
+| learned_params | TEXT (JSON) | no | `'{}'` | EMA (alpha 0.2) of accepted adjustments in render-param keys, only values that differ from the default, e.g. `{"dx":1.95,"ink_tone":0.24}`; new jobs start from it |
+| typical_region | TEXT (JSON) | yes | — | Welford running stats of accepted token quads, normalised to image size: `{"count":37,"cx":0.62,"cy":0.18,"sx":0.03,"sy":0.01,"w":0.21,"h":0.04,"m2_cx":…}` |
 | metrics | TEXT (JSON) | yes | — | Layout stats learned from references: pitch, cap-height ratio, advances per char |
 | archived_at | TIMESTAMP | yes | — | Archived profiles hidden by default |
 | created_at / updated_at | TIMESTAMP | no | now | |

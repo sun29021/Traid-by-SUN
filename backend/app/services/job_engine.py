@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 from app.core.errors import AppError, ErrorCode
 from app.db.engine import Database
 from app.db.models import EditJob, EditJobGlyph, Glyph, Profile, Task
-from app.db.models.enums import FileKind, JobStatus, MimeType, SurfaceType
+from app.db.models.enums import FileKind, GlyphStatus, JobStatus, MimeType, SurfaceType
 from app.engine.candidates import score_regions
 from app.engine.detect import TextDetector
 from app.engine.geometry import clip_quad, expand_quad, quad_iou, rectify
@@ -40,7 +40,7 @@ from app.engine.types import DecodedImage
 from app.repositories import files as files_repo
 from app.repositories import jobs as repo
 from app.repositories import profiles as profiles_repo
-from app.services.files import store_generated_file
+from app.services.files import store_generated_file, store_generated_png
 from app.services.mappers import file_url
 from app.storage.filestore import FileStore
 from app.worker.runner import TaskContext
@@ -395,6 +395,82 @@ def handle_render(deps: JobDeps, ctx: TaskContext) -> None:
         job.error_code = None
         job.status = JobStatus.RENDERED.value
     ctx.report(1.0, f"Rendered ({result.quality.overall})")
+
+
+def harvest_glyphs(deps: JobDeps, job_id: str) -> int:
+    """Add the accepted job's *original* characters to the bank as glyphs to review.
+
+    Crops come from the decoded input image, never from a result, so Traid never
+    learns from its own output (PRD FR-P06). Runs once per job.
+    """
+    with deps.db.session() as session:
+        job = repo.get_unscoped(session, job_id)
+        if job is None or job.status != JobStatus.ACCEPTED.value:
+            return 0
+        if not job.selected_quad or not job.original_text:
+            return 0
+        if repo.has_harvested(session, job.id):
+            return 0
+        profile = profiles_repo.get_profile(session, job.owner_id, job.profile_id)
+        stored = files_repo.get(session, job.owner_id, job.input_file_id)
+        if profile is None or stored is None:
+            return 0
+        decoded = deps.decoded(stored.storage_path)
+        mode = SurfaceType(profile.surface_type).blend_mode
+        key = (stored.storage_path, tuple(map(tuple, job.selected_quad)), job.original_text, mode)
+        try:
+            prepared = deps.prepared(
+                decoded, key, np.asarray(job.selected_quad, np.float32), job.original_text, mode
+            )
+        except PreparationError:
+            return 0
+        allowed = set(profile.charset) - {" "}
+        added = 0
+        for sample in prepared.same_image:
+            if sample.char not in allowed or sample.source_quad is None:
+                continue
+            crop = store_generated_png(
+                session,
+                deps.store,
+                owner_id=job.owner_id,
+                data=_rgba_png(sample.rgba),
+                kind=FileKind.GLYPH,
+                width=int(sample.rgba.shape[1]),
+                height=int(sample.rgba.shape[0]),
+            )
+            m = sample.metrics
+            session.add(
+                Glyph(
+                    profile_id=profile.id,
+                    source_job_id=job.id,
+                    crop_file_id=crop.id,
+                    char=sample.char,
+                    status=GlyphStatus.AUTO.value,
+                    source_quad=[
+                        [round(float(x), 2), round(float(y), 2)] for x, y in sample.source_quad
+                    ],
+                    cap_height_px=max(m.cap_height_px, 0.01),
+                    stroke_width_px=m.stroke_width_px,
+                    blur_sigma=m.blur_sigma,
+                    noise_sigma=m.noise_sigma,
+                    ink_color=m.ink_color,
+                    bg_luma=float(np.clip(m.bg_luma, 0, 1)),
+                    contrast=float(np.clip(m.contrast, 0, 1)),
+                    angle_deg=float(np.clip(sample.angle_deg, -90, 90)),
+                    light_dir_deg=m.light_dir_deg % 360 if m.light_dir_deg is not None else None,
+                    ocr_confidence=float(np.clip(m.quality, 0, 1)),
+                    quality_score=m.quality,
+                    baseline_y=sample.baseline_y,
+                )
+            )
+            added += 1
+        return added
+
+
+def _rgba_png(rgba: np.ndarray) -> bytes:
+    buffer = io.BytesIO()
+    Image.fromarray(np.ascontiguousarray(rgba), "RGBA").save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
 def glyph_variants(

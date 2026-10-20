@@ -22,7 +22,7 @@ from app.schemas.profiles import (
     ProfileStatus,
     ProfileUpdate,
 )
-from app.services import audit
+from app.services import audit, learning
 from app.services.audit import AuditAction
 
 # Spaces never need glyphs: the renderer leaves a gap.
@@ -71,7 +71,12 @@ def _status(items: Sequence[CoverageItem], training: bool) -> ProfileStatus:
     return "draft"
 
 
-def to_out(profile: Profile, counts: repo.ProfileCounts, training: bool) -> ProfileOut:
+def to_out(
+    profile: Profile,
+    counts: repo.ProfileCounts,
+    training: bool,
+    decisions: tuple[int, int] = (0, 0),
+) -> ProfileOut:
     items = coverage_items(profile, counts)
     return ProfileOut(
         id=profile.id,
@@ -96,8 +101,8 @@ def to_out(profile: Profile, counts: repo.ProfileCounts, training: bool) -> Prof
             glyphs_confirmed=sum(c.confirmed for c in counts.chars.values()),
             glyphs_auto=sum(c.auto for c in counts.chars.values()),
             references=counts.references,
-            jobs_accepted=0,  # edit jobs arrive in Phase 9
-            acceptance_rate=None,
+            jobs_accepted=decisions[0],
+            acceptance_rate=learning.acceptance_rate(*decisions),
         ),
         learned_params=profile.learned_params,
         archived_at=profile.archived_at,
@@ -110,7 +115,10 @@ def describe(session: Session, profiles: Sequence[Profile]) -> list[ProfileOut]:
     ids = [p.id for p in profiles]
     counts = repo.glyph_counts(session, ids)
     training = repo.training_profile_ids(session, ids)
-    return [to_out(p, counts[p.id], p.id in training) for p in profiles]
+    decisions = learning.decision_counts(session, ids)
+    return [
+        to_out(p, counts[p.id], p.id in training, decisions.get(p.id, (0, 0))) for p in profiles
+    ]
 
 
 def list_profiles(

@@ -156,6 +156,7 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 | POST | `/profiles/{id}/unarchive` | Restore | Idempotent. |
 | DELETE | `/profiles/{id}` | Permanent delete | Only archived profiles; body `{ "confirm_name": "<name>" }` must match; `409` if any batch is running or jobs reference it unless `?with_jobs=true` (deletes its jobs too). Audit `profile.deleted`. |
 | GET | `/profiles/{id}/coverage` | Coverage matrix | `[{ char, confirmed, auto, rejected, best_quality, ready }]` |
+| GET | `/profiles/{id}/learning` | What the profile learned | `{ accepted, rejected, acceptance_rate, learned_params, typical_region: { count, cx, cy, sx, sy, w, h } \| null, history: [{ date, accepted, rejected }×14] }` |
 | GET | `/profiles/{id}/learning` | Learning stats | Acceptance rate series (last 50 jobs), most-rejected glyphs, learned params. (Should) |
 
 ### 3.4 Reference images

@@ -158,6 +158,12 @@ def newer_render_queued(session: Session, job_id: str, task_id: str, created: da
     return bool(count)
 
 
+def has_harvested(session: Session, job_id: str) -> bool:
+    return (
+        session.scalar(select(Glyph.id).where(Glyph.source_job_id == job_id).limit(1)) is not None
+    )
+
+
 def delete_job(session: Session, job: EditJob) -> None:
     session.delete(job)
     session.flush()

@@ -47,7 +47,11 @@ def glyph_out(glyph: Glyph) -> GlyphOut:
         char=glyph.char,
         status=glyph.status,  # type: ignore[arg-type]
         crop_url=file_url(glyph.crop_file_id),
-        source=GlyphSource(type="reference", id=glyph.source_reference_id),
+        source=(
+            GlyphSource(type="job", id=glyph.source_job_id)
+            if glyph.source_job_id
+            else GlyphSource(type="reference", id=glyph.source_reference_id)
+        ),
         metrics=GlyphMetricsOut(
             cap_height_px=glyph.cap_height_px,
             stroke_width_px=glyph.stroke_width_px,

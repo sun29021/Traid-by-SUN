@@ -213,6 +213,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** counters/EMA math; rejected glyphs rank lower; harvested glyphs only come from input files, never results.
 - **Done when:** repeated accepts measurably change selection and defaults in tests.
+- **Status (2026-10-20): DONE.** `services/learning.py` (glyph counters, learned_params EMA, typical_region Welford update, decision counts, 14-day summary) inside the accept/reject transactions; profile stats show accepted jobs and acceptance rate; `GET /profiles/{id}/learning` + Overview "Learning" panel with a 14-day chart and learned starting adjustments; accepting a job adds its original characters (cropped from the input photo, never the result; once per job) as `auto` glyphs with `source_job_id`. Tests: EMA/Welford math, three accepts change the next job's starting adjustments and the typical region, a rejected glyph drops in the variant ranking, harvested crops match the original strip and not the result.
 
 ## Phase 12 — Batch (S)
 

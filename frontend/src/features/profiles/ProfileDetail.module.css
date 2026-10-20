@@ -142,3 +142,31 @@
   padding: 0;
   border: 0;
 }
+
+/* Learning history: one bar per day, accepted (bottom) and rejected stacked. */
+.history {
+  margin: var(--space-3) 0;
+}
+
+.bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 48px;
+}
+
+.bar {
+  display: flex;
+  flex: 1;
+  flex-direction: column-reverse;
+  height: 100%;
+  border-bottom: 1px solid var(--border-default);
+}
+
+.barAccepted {
+  background: var(--success, #3fb950);
+}
+
+.barRejected {
+  background: var(--danger, #f85149);
+}

@@ -218,3 +218,20 @@ class GlyphBulk(ApiModel):
 
 class BulkResult(ApiModel):
     updated: int
+
+
+class LearningDay(ApiModel):
+    date: str
+    accepted: int
+    rejected: int
+
+
+class LearningOut(ApiModel):
+    """What the profile has learned from accepted and rejected edits (PRD FR-P05)."""
+
+    accepted: int
+    rejected: int
+    acceptance_rate: float | None
+    learned_params: dict[str, float]
+    typical_region: dict[str, float] | None
+    history: list[LearningDay]

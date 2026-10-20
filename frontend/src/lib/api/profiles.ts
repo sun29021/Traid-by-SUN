@@ -5,6 +5,7 @@ import type {
   Glyph,
   GlyphBulk,
   GlyphStatus,
+  Learning,
   Profile,
   ProfileCreate,
   ProfileUpdate,
@@ -155,4 +156,8 @@ export function bulkUpdateGlyphs(profileId: string, body: GlyphBulk): Promise<Bu
     method: 'POST',
     body,
   });
+}
+
+export function getLearning(profileId: string, signal?: AbortSignal): Promise<Learning> {
+  return apiRequest<Learning>(`/profiles/${id(profileId)}/learning`, withSignal(signal));
 }

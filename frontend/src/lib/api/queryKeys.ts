@@ -10,6 +10,7 @@ export const queryKeys = {
   profileList: (archived: string) => ['profiles', 'list', archived] as const,
   profile: (id: string) => ['profiles', id] as const,
   coverage: (id: string) => ['profiles', id, 'coverage'] as const,
+  learning: (id: string) => ['profiles', id, 'learning'] as const,
   references: (id: string) => ['profiles', id, 'references'] as const,
   glyphs: (id: string, filters: unknown) => ['profiles', id, 'glyphs', filters] as const,
   allGlyphs: (id: string) => ['profiles', id, 'glyphs'] as const,

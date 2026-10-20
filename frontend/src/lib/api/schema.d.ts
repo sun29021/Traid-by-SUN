@@ -150,7 +150,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Accept */
+        /**
+         * Accept
+         * @description Accept the render: learning update + audit; the job's original characters become
+         *     glyph candidates for review.
+         */
         post: operations["accept_api_v1_jobs__job_id__accept_post"];
         delete?: never;
         options?: never;
@@ -378,6 +382,26 @@ export interface paths {
         put?: never;
         /** Bulk Update Glyphs */
         post: operations["bulk_update_glyphs_api_v1_profiles__profile_id__glyphs_bulk_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/profiles/{profile_id}/learning": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Learning
+         * @description Acceptance stats, learned starting adjustments and typical token position.
+         */
+        get: operations["get_learning_api_v1_profiles__profile_id__learning_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -682,6 +706,10 @@ export interface components {
         DataEnvelope_JobCreated_: {
             data: components["schemas"]["JobCreated"];
         };
+        /** DataEnvelope[LearningOut] */
+        DataEnvelope_LearningOut_: {
+            data: components["schemas"]["LearningOut"];
+        };
         /** DataEnvelope[list[CoverageItem]] */
         DataEnvelope_list_CoverageItem__: {
             /** Data */
@@ -946,6 +974,37 @@ export interface components {
          * @enum {string}
          */
         JobStatus: "uploaded" | "detecting" | "detected" | "rendering" | "rendered" | "accepted" | "rejected" | "failed";
+        /** LearningDay */
+        LearningDay: {
+            /** Accepted */
+            accepted: number;
+            /** Date */
+            date: string;
+            /** Rejected */
+            rejected: number;
+        };
+        /**
+         * LearningOut
+         * @description What the profile has learned from accepted and rejected edits (PRD FR-P05).
+         */
+        LearningOut: {
+            /** Acceptance Rate */
+            acceptance_rate: number | null;
+            /** Accepted */
+            accepted: number;
+            /** History */
+            history: components["schemas"]["LearningDay"][];
+            /** Learned Params */
+            learned_params: {
+                [key: string]: number;
+            };
+            /** Rejected */
+            rejected: number;
+            /** Typical Region */
+            typical_region: {
+                [key: string]: number;
+            } | null;
+        };
         /** ListEnvelope[AuditEventOut] */
         ListEnvelope_AuditEventOut_: {
             /** Data */
@@ -2188,6 +2247,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DataEnvelope_BulkResult_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_learning_api_v1_profiles__profile_id__learning_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_LearningOut_"];
                 };
             };
             /** @description Validation Error */

@@ -41,7 +41,7 @@ from app.schemas.jobs import (
     RenderParamsIn,
     RenderRequest,
 )
-from app.services import audit
+from app.services import audit, learning
 from app.services import profiles as profiles_service
 from app.services.audit import AuditAction
 from app.services.files import store_image_upload
@@ -347,7 +347,7 @@ def accept(session: Session, owner_id: str, job_id: str) -> EditJobOut:
         if job.status == JobStatus.ACCEPTED.value:
             return to_out(session, job)  # idempotent
         _require(job, (JobStatus.RENDERED,), "accept")
-        repo.bump_glyph_counters(session, repo.job_glyph_ids(session, job.id), accepted=True)
+        learning.on_accept(session, job)
         job.status = JobStatus.ACCEPTED.value
         job.accepted_at = utcnow()
         audit.record(
@@ -364,7 +364,7 @@ def reject(session: Session, owner_id: str, job_id: str, reason: str | None) -> 
     with transaction(session):
         job = get_owned(session, owner_id, job_id)
         _require(job, (JobStatus.RENDERED,), "reject")
-        repo.bump_glyph_counters(session, repo.job_glyph_ids(session, job.id), accepted=False)
+        learning.on_reject(session, job)
         job.status = JobStatus.REJECTED.value
         job.reject_reason = reason.strip() if reason and reason.strip() else None
         audit.record(
