@@ -3,6 +3,9 @@ export const queryKeys = {
   health: ['health'] as const,
   systemStatus: ['system', 'status'] as const,
   welcome: ['system', 'welcome'] as const,
+  settings: ['settings'] as const,
+  backups: ['system', 'backups'] as const,
+  audit: (filters: unknown) => ['audit', filters] as const,
   activeTasks: ['tasks', 'active'] as const,
   task: (id: string) => ['tasks', id] as const,
 

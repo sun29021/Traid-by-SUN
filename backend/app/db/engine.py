@@ -78,5 +78,5 @@ def alembic_config(engine: Engine) -> Config:
 
 
 def run_migrations(engine: Engine, revision: str = "head") -> None:
-    # The automatic pre-migration backup arrives with backups in Phase 13 (task 13.3).
+    # The pre-migration backup runs before this at startup (services/backup_task.py).
     command.upgrade(alembic_config(engine), revision)

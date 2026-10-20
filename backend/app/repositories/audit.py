@@ -26,12 +26,15 @@ def list_events(
     created_from: datetime | None,
     created_to: datetime | None,
     cursor: Cursor | None,
+    subject_id: str | None = None,
     limit: int,
 ) -> Sequence[AuditEvent]:
     """Newest first; fetches `limit + 1` rows so the caller can tell if more exist."""
     query = select(AuditEvent)
     if actions:
         query = query.where(AuditEvent.action.in_(actions))
+    if subject_id is not None:
+        query = query.where(AuditEvent.subject_id == subject_id)
     if created_from is not None:
         query = query.where(AuditEvent.created_at >= created_from)
     if created_to is not None:

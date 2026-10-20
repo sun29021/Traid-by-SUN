@@ -48,3 +48,5 @@ export type BatchStatus = Batch['status'];
 export type BatchCounts = Schemas['BatchCounts'];
 export type BatchValidation = Schemas['BatchValidation'];
 export type BatchStarted = Schemas['BatchStarted'];
+export type Backup = Schemas['BackupOut'];
+export type Settings = Record<string, unknown>;

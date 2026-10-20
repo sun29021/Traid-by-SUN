@@ -124,8 +124,9 @@ Clients poll `GET /tasks/{id}` (recommended 500 ms) until `succeeded | failed | 
 |--------|------|------|---------|
 | GET | `/health` | Public | Liveness: `{ "status": "ok", "version": "1.0.0" }`. No sensitive info. |
 | GET | `/system/status` | Owner | Engine status: models (name, version, loaded, checksum_ok), device (`cpu`/`directml`/`cuda`), worker state, queue length, disk usage of data dir, schema revision. |
-| POST | `/system/backups` | Owner | Start backup task → `202` Task. |
-| GET | `/system/backups` | Owner | List backups (`FileRef` + created_at + integrity result). |
+| POST | `/system/backups` | Owner | Start backup task → `202` Task (`type: backup`). |
+| GET | `/system/backups` | Owner | List backups, newest first: `[{ name, kind: manual\|pre-migrate, byte_size, created_at, schema_revision, file_count, integrity_ok, download_url }]`. Backups live in `data/backups/` (not the content-addressed file store), so they are not `FileRef`s. |
+| GET | `/system/backups/{name}` | Owner | Download one backup ZIP. `name` must match the backup naming pattern (no paths). |
 
 ### 3.2a Welcome (MVP, replaces account setup)
 | Method | Path | Auth | Request | Response |
@@ -224,7 +225,7 @@ Batch item review uses the normal `/jobs/{id}` endpoints.
 |--------|------|---------|-------|
 | GET | `/settings` | All settings with defaults applied | |
 | PATCH | `/settings` | Update | Keys: `export.default_format` (`original|jpeg|png|tiff`), `export.filename_pattern` (tokens `{template}`, `{token}`, `{date}`, `{n}`; ≤ 120 chars; only `[A-Za-z0-9_{}.-]`), `export.metadata_marker` (bool), `export.jpeg_quality_mode` (`match_source|fixed:<60–100>`), `storage.backup_retention` (1–50). Audit `settings.updated`. |
-| GET | `/audit` | Audit log | Filters: `action` (csv), `from`, `to`. Cursor-paginated. Read-only. |
+| GET | `/audit` | Audit log | Filters: `action` (csv), `subject_id`, `from`, `to`. Cursor-paginated. Read-only. |
 
 ---
 

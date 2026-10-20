@@ -183,3 +183,37 @@ test('a 10-value batch renders, accepts the passed items and exports a ZIP', asy
   await page.getByRole('button', { name: /Export accepted/ }).click();
   await expect(page.getByText('The ZIP is ready.')).toBeVisible({ timeout: 60_000 });
 });
+
+test('history, settings and a real backup are accessible', async ({ page, request }) => {
+  test.setTimeout(120_000);
+  await readyProfile(request);
+  const serious = async () =>
+    (await new AxeBuilder({ page }).analyze()).violations
+      .filter((v) => v.impact === 'serious' || v.impact === 'critical')
+      .map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(' ')).join(', ')}`);
+
+  await page.goto('/history?status=accepted');
+  const row = page.getByRole('row', { name: /A7-204913 → A7-204931/ }).first();
+  await expect(row).toBeVisible();
+  expect(await serious()).toEqual([]);
+  await row.click();
+  await expect(page).toHaveURL(/\/history\/[^/]+$/);
+  await expect(page.getByRole('button', { name: 'Export again' })).toBeVisible();
+  await expect(page.getByText('Edit accepted').first()).toBeVisible();
+  expect(await serious()).toEqual([]);
+
+  await page.goto('/settings/storage');
+  await page.getByRole('button', { name: 'Back up now' }).click();
+  await expect(page.getByText(/Backup traid-\d{8}-\d{6}.*created/)).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(page.getByRole('row', { name: /traid-\d{8}-\d{6}/ }).first()).toContainText('OK');
+  expect(await serious()).toEqual([]);
+
+  for (const tab of ['Engine', 'Export', 'Audit log', 'About']) {
+    await page.getByRole('tab', { name: tab }).click();
+    await page.waitForLoadState('networkidle');
+    expect(await serious(), tab).toEqual([]);
+  }
+  await expect(page.getByText('Traid · Designed & developed by Xavier Sun')).toBeVisible();
+});

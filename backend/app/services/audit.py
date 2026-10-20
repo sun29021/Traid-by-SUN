@@ -81,6 +81,7 @@ def list_events(
     created_to: datetime | None,
     cursor: str | None,
     limit: int,
+    subject_id: str | None = None,
 ) -> AuditPage:
     rows = audit_repo.list_events(
         session,
@@ -89,6 +90,7 @@ def list_events(
         created_to=created_to,
         cursor=decode_cursor(cursor) if cursor else None,
         limit=limit,
+        subject_id=subject_id,
     )
     events, next_cursor = split_page(rows, limit)
     return AuditPage(events, next_cursor)

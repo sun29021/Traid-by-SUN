@@ -1,5 +1,6 @@
 .scroller {
   overflow-x: auto;
+  outline: none;
   border: var(--border-width) solid var(--border-subtle);
   border-radius: var(--radius-md);
 }
@@ -74,4 +75,8 @@ td.end {
 
 .selected td:first-child {
   box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.scroller:focus-visible {
+  box-shadow: var(--focus-ring);
 }

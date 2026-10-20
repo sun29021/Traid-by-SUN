@@ -55,7 +55,8 @@ export function Table<Row>({
   };
 
   return (
-    <div className={styles.scroller}>
+    // Focusable so keyboard users can scroll a wide table (WCAG 2.1.1, axe scrollable-region).
+    <div className={styles.scroller} role="region" aria-label={caption} tabIndex={0}>
       <table className={styles.table}>
         <caption className="visually-hidden">{caption}</caption>
         <thead>

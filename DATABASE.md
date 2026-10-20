@@ -347,13 +347,13 @@ No other indexes until a measured need appears.
 | Images & glyph crops | Confidential | Local disk only; served only to the authenticated owner; deleted with their owning rows (orphan sweep) |
 | Audit details | Internal | IDs, counts, formats only |
 
-File cleanup: a periodic sweep (on startup and daily) deletes `files` rows and disk files that are no longer referenced by any table (except `backup` kind managed by retention).
+File cleanup (implemented in Phase 13, `services/maintenance.py`): a sweep on startup deletes `files` rows of derived kinds (`mask`, `result`, `background`, `glyph`) older than one hour that no table references, and their disk file when no other row shares it. Uploads, exports, ZIPs and backups are never swept (exports are deliberately unreferenced records of what was handed out).
 
 ## 9. Migration strategy
 
 - Alembic with one revision per change, descriptive names (`0001_initial_auth`, `0002_profiles_glyphs`, …) aligned with IMPLEMENTATION_PLAN phases.
 - Revisions are forward-only in production; each still defines `downgrade()` for development.
-- On app start in production: create backup (`data/backups/pre-migrate-<rev>-<timestamp>.zip`) → `alembic upgrade head` → start. If migration fails, the app refuses to start and logs the backup path.
+- On app start (every environment except tests): if the existing database is behind the newest migration, create `data/backups/pre-migrate-<rev>-<timestamp>.zip` → `alembic upgrade head` → start. A fresh install or an up-to-date database is not backed up. If the migration fails, the app refuses to start; the backup is next to the database.
 - Schema changes that rewrite tables (SQLite limitations) use Alembic batch mode.
 - No destructive migration (dropping columns/tables with data) without an explicit note in the revision and owner approval.
 

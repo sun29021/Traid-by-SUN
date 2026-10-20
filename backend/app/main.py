@@ -34,8 +34,10 @@ from app.db.engine import Database, run_migrations
 from app.engine.detect import PaddleOcr, TextDetector
 from app.engine.models import ModelRegistry
 from app.engine.pipeline import GlyphTransplantSynthesizer
+from app.services.backup_task import BackupDeps, backup_before_migration
 from app.services.extraction import ExtractionDeps
 from app.services.job_engine import JobDeps
+from app.services.maintenance import sweep_orphans
 from app.services.owner import ensure_local_owner
 from app.storage.filestore import FileStore
 from app.worker.handlers import create_handlers
@@ -59,6 +61,8 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         db = Database.from_settings(settings)
+        if settings.env is not Environment.TEST:
+            backup_before_migration(db, settings.data_dir)
         run_migrations(db.engine)
         with db.session_factory() as session:
             owner_id = ensure_local_owner(session).id
@@ -67,6 +71,8 @@ def create_app(
             settings.model_dir, device=settings.device, gpu_device_id=settings.gpu_device_id
         )
         store = FileStore(settings.data_dir / "files")
+        with db.session() as session:
+            sweep_orphans(session, store)
         ocr = detector or PaddleOcr(models)
         job_deps = JobDeps(
             db=db,
@@ -74,7 +80,11 @@ def create_app(
             detector=ocr,
             synthesizer=GlyphTransplantSynthesizer(registry=models, detector=ocr),
         )
-        handlers = create_handlers(ExtractionDeps(db=db, store=store, detector=ocr), job_deps)
+        handlers = create_handlers(
+            ExtractionDeps(db=db, store=store, detector=ocr),
+            job_deps,
+            BackupDeps(db=db, data_dir=settings.data_dir),
+        )
         runner = TaskRunner(db, handlers)
         runner.recover_interrupted()
         if start_worker:

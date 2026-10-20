@@ -3,9 +3,11 @@ import type { RouteObject } from 'react-router-dom';
 
 import { BatchPage } from '@/features/batch/BatchPage';
 import { EditorPage } from '@/features/editor/EditorPage';
+import { HistoryPage } from '@/features/history/HistoryPage';
 import { HomePage } from '@/features/home/HomePage';
 import { ProfileDetailPage } from '@/features/profiles/ProfileDetailPage';
 import { ProfilesPage } from '@/features/profiles/ProfilesPage';
+import { SettingsPage } from '@/features/settings/SettingsPage';
 import { WelcomeGate } from '@/features/welcome/WelcomeGate';
 import { WelcomePage } from '@/features/welcome/WelcomePage';
 
@@ -21,21 +23,14 @@ const BUILT: Record<string, ReactNode> = {
   '/editor': <EditorPage />,
   '/profiles': <ProfilesPage />,
   '/batch': <BatchPage />,
+  '/history': <HistoryPage />,
+  '/settings': <SettingsPage />,
 };
 
 /** Pages that use the whole content area without padding (DESIGN.md §11.5). */
 const FULL_BLEED = new Set(['/editor']);
 
-const PLANNED: Record<string, { description: string; phase: string }> = {
-  '/history': {
-    description: 'Find, re-open and re-export past edit jobs.',
-    phase: 'Phase 13',
-  },
-  '/settings': {
-    description: 'Account, engine status, export defaults, storage, backup, audit log and About.',
-    phase: 'Phase 13',
-  },
-};
+const PLANNED: Record<string, { description: string; phase: string }> = {};
 
 export const routes: RouteObject[] = [
   {
@@ -80,6 +75,16 @@ function appRoutes(): RouteObject[] {
       path: '/editor/:jobId',
       handle: { title: 'Editor', fullBleed: true } satisfies RouteHandle,
       element: <EditorPage />,
+    },
+    {
+      path: '/history/:jobId',
+      handle: { title: 'History' } satisfies RouteHandle,
+      element: <HistoryPage />,
+    },
+    {
+      path: '/settings/:tab',
+      handle: { title: 'Settings' } satisfies RouteHandle,
+      element: <SettingsPage />,
     },
     {
       path: '/batch/:batchId',

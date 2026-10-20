@@ -241,6 +241,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** filters/pagination; settings validation; backup integrity check; restore procedure tested manually once and documented.
 - **Done when:** all MVP screens in PRD §11 are complete.
+- **Status (2026-10-20): DONE.** History (`/history`: token prefix search, profile/status/quality/date filters in the URL, cursor "Load more"; `/history/:id`: before/after, quality, adjustments, engine and seed, activity from the audit log, export again, edit a copy, delete). Settings (`/settings/:tab`): Engine (status, devices, models), Export defaults (`GET/PATCH /settings` with server validation + audit), Storage & backup (usage, backup now, retention, list with integrity, restore steps), Audit log, About (credits, acceptable use, licenses). Account/password is not shown: local mode has no sign-in (PRD D-03). Backups: `services/backup.py` (SQLite online backup + files + manifest, integrity check, retention), `backup` task, `scripts/backup.ps1` / `python -m app.backup_cli`, pre-migration backup on start, conservative orphan sweep, audit `subject_id` filter. Restore was tested by unzipping a backup and opening the database (test), and is documented in README and Settings. 15 API tests, 5 UI tests, Playwright History/Settings/backup with axe (also fixed: wide tables now have a focusable scroll region).
 
 ## Phase 14 — Hardening & release
 

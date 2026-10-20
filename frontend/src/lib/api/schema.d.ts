@@ -623,6 +623,65 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Settings
+         * @description All settings with defaults applied.
+         */
+        get: operations["get_settings_api_v1_settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Settings */
+        patch: operations["patch_settings_api_v1_settings_patch"];
+        trace?: never;
+    };
+    "/api/v1/system/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Backups
+         * @description Newest first, with the integrity check result of each.
+         */
+        get: operations["list_backups_api_v1_system_backups_get"];
+        put?: never;
+        /** Start Backup */
+        post: operations["start_backup_api_v1_system_backups_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/system/backups/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Backup */
+        get: operations["download_backup_api_v1_system_backups__name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/system/status": {
         parameters: {
             query?: never;
@@ -767,6 +826,25 @@ export interface components {
             subject_type: string | null;
             /** User Id */
             user_id: string | null;
+        };
+        /** BackupOut */
+        BackupOut: {
+            /** Byte Size */
+            byte_size: number;
+            /** Created At */
+            created_at: string;
+            /** Download Url */
+            download_url: string;
+            /** File Count */
+            file_count: number;
+            /** Integrity Ok */
+            integrity_ok: boolean | null;
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Schema Revision */
+            schema_revision: string | null;
         };
         /** BatchCounts */
         BatchCounts: {
@@ -914,6 +992,13 @@ export interface components {
         DataEnvelope_BulkResult_: {
             data: components["schemas"]["BulkResult"];
         };
+        /** DataEnvelope[dict[str, Any]] */
+        DataEnvelope_dict_str__Any__: {
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+        };
         /** DataEnvelope[EditJobOut] */
         DataEnvelope_EditJobOut_: {
             data: components["schemas"]["EditJobOut"];
@@ -937,6 +1022,11 @@ export interface components {
         /** DataEnvelope[LearningOut] */
         DataEnvelope_LearningOut_: {
             data: components["schemas"]["LearningOut"];
+        };
+        /** DataEnvelope[list[BackupOut]] */
+        DataEnvelope_list_BackupOut__: {
+            /** Data */
+            data: components["schemas"]["BackupOut"][];
         };
         /** DataEnvelope[list[BatchOut]] */
         DataEnvelope_list_BatchOut__: {
@@ -1572,6 +1662,13 @@ export interface components {
             params?: components["schemas"]["RenderParamsIn"] | null;
         };
         /**
+         * SettingsPatch
+         * @description Any subset of the setting keys.
+         */
+        SettingsPatch: {
+            [key: string]: unknown;
+        };
+        /**
          * SpacingMode
          * @enum {string}
          */
@@ -1698,6 +1795,7 @@ export interface operations {
                 cursor?: string | null;
                 from?: string | null;
                 limit?: number;
+                subject_id?: string | null;
                 to?: string | null;
             };
             header?: never;
@@ -2980,6 +3078,128 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["DataEnvelope_TaskOut_"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_settings_api_v1_settings_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_dict_str__Any__"];
+                };
+            };
+        };
+    };
+    patch_settings_api_v1_settings_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SettingsPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_dict_str__Any__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_backups_api_v1_system_backups_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_list_BackupOut__"];
+                };
+            };
+        };
+    };
+    start_backup_api_v1_system_backups_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_TaskOut_"];
+                };
+            };
+        };
+    };
+    download_backup_api_v1_system_backups__name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

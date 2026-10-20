@@ -18,12 +18,15 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 @router.get(
     "",
     response_model=ListEnvelope[AuditEventOut],
-    dependencies=[Depends(allowed_query_params("action", "from", "to", "cursor", "limit"))],
+    dependencies=[
+        Depends(allowed_query_params("action", "subject_id", "from", "to", "cursor", "limit"))
+    ],
 )
 def list_audit_events(
     _: AcceptedUserDep,
     session: SessionDep,
     action: Annotated[str | None, Query()] = None,
+    subject_id: Annotated[str | None, Query(max_length=36)] = None,
     created_from: Annotated[AwareDatetime | None, Query(alias="from")] = None,
     created_to: Annotated[AwareDatetime | None, Query(alias="to")] = None,
     cursor: Annotated[str | None, Query(max_length=200)] = None,
@@ -37,6 +40,7 @@ def list_audit_events(
         created_to=created_to,
         cursor=cursor,
         limit=limit,
+        subject_id=subject_id,
     )
     return ListEnvelope(
         data=[AuditEventOut.model_validate(event) for event in page.events],

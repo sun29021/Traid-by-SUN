@@ -2,12 +2,23 @@
 
 from fastapi import APIRouter
 
-from app.api.v1 import audit, batches, files, jobs, profiles, references, system, tasks
+from app.api.v1 import (
+    audit,
+    batches,
+    files,
+    jobs,
+    profiles,
+    references,
+    settings,
+    system,
+    tasks,
+)
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(system.router)
 router.include_router(tasks.router)
 router.include_router(audit.router)
+router.include_router(settings.router)
 router.include_router(profiles.router)
 router.include_router(references.router)
 router.include_router(jobs.router)
