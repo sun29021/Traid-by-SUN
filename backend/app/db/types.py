@@ -8,12 +8,14 @@ from __future__ import annotations
 
 import json
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import String, Text
 from sqlalchemy.engine import Dialect
 from sqlalchemy.types import TypeDecorator
+
+from app.core.clock import isoformat_utc
 
 
 def new_id() -> str:
@@ -25,12 +27,7 @@ class UtcDateTime(TypeDecorator[datetime]):
     cache_ok = True
 
     def process_bind_param(self, value: datetime | None, dialect: Dialect) -> str | None:
-        if value is None:
-            return None
-        if value.tzinfo is None:
-            raise ValueError("Naive datetimes are not allowed; use app.core.clock.utcnow()")
-        utc = value.astimezone(UTC)
-        return utc.strftime("%Y-%m-%dT%H:%M:%S.") + f"{utc.microsecond // 1000:03d}Z"
+        return None if value is None else isoformat_utc(value)
 
     def process_result_value(self, value: str | None, dialect: Dialect) -> datetime | None:
         if value is None:

@@ -83,6 +83,10 @@ class TaskRunner:
             logger.warning("Marked interrupted tasks as failed", extra={"count": count})
         return count
 
+    @property
+    def is_running(self) -> bool:
+        return self._thread is not None and self._thread.is_alive()
+
     def start(self) -> None:
         if self._thread is not None:
             return

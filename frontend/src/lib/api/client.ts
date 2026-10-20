@@ -5,7 +5,12 @@
 
 export const API_BASE: string = import.meta.env.VITE_API_BASE ?? '/api/v1';
 
-const CSRF_HEADER = 'X-Traid-CSRF';
+/**
+ * Local request guard (ARCHITECTURE.md §7.1): the server only accepts changes that carry
+ * this header. Other websites cannot send it, so they cannot change Traid's data.
+ */
+const CLIENT_HEADER = 'X-Traid-Client';
+const CLIENT_HEADER_VALUE = 'web';
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 export interface ApiErrorBody {
@@ -39,13 +44,6 @@ export class NetworkError extends Error {
   }
 }
 
-let csrfToken: string | null = null;
-
-/** Set after GET /auth/me (Phase 2). Sent on every state-changing request. */
-export function setCsrfToken(token: string | null): void {
-  csrfToken = token;
-}
-
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
@@ -72,8 +70,8 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
     headers['Content-Type'] = 'application/json';
     body = JSON.stringify(options.body);
   }
-  if (MUTATING_METHODS.has(method) && csrfToken) {
-    headers[CSRF_HEADER] = csrfToken;
+  if (MUTATING_METHODS.has(method)) {
+    headers[CLIENT_HEADER] = CLIENT_HEADER_VALUE;
   }
 
   let response: Response;

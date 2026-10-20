@@ -63,6 +63,7 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 
 - **Tests:** owner auto-created once; foreign Origin → 403; write without header → 403; form-style cross-site POST → 403; AUP gate → 403 until accepted, then 200; audit events written and immutable; task endpoints incl. cancel/retry and 404 for unknown IDs.
 - **Done when:** every later router can depend on `current_user` and `require_aup`; no other website can change data.
+- **Status (2026-10-20): DONE.** Migration `0003_local_owner`; owner bootstrap (`services/owner.py`); request guard (`core/http_security.py`); deps (`api/deps.py`: session, `current_user`, `require_aup`, unknown-query rejection, CSV enum filters); keyset cursor pagination (`core/pagination.py`, `repositories/pagination.py`); audit service + `GET /audit`; `GET /tasks`, `GET /tasks/{id}`, cancel, retry; `GET /system/status`, `GET/POST /system/welcome`. Frontend client sends `X-Traid-Client`. 107 backend tests.
 
 ## Later (optional) — Password lock (PRD US-02)
 

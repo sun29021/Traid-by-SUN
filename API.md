@@ -208,7 +208,7 @@ Batch item review uses the normal `/jobs/{id}` endpoints.
 | Method | Path | Purpose |
 |--------|------|---------|
 | GET | `/tasks/{id}` | Task status/progress |
-| GET | `/tasks?status=queued,running` | Active tasks (Tasks chip) |
+| GET | `/tasks` | Tasks, newest first, cursor-paginated. `status` (csv of `queued,running,succeeded,failed,cancelled`) defaults to `queued,running` (Tasks chip). Task `payload` is never returned. |
 | POST | `/tasks/{id}/cancel` | Request cancellation (honoured between stages) |
 | POST | `/tasks/{id}/retry` | Re-enqueue a `failed` task (same payload) → `202` new Task |
 

@@ -19,15 +19,25 @@ from app import __version__
 from app.api.v1 import router as api_v1_router
 from app.core.config import Environment, Settings, get_settings
 from app.core.errors import NotFound, register_error_handlers
-from app.core.http_security import LOCAL_HOSTS, TEST_CLIENT_HOST, host_guard, security_headers
+from app.core.http_security import (
+    CLIENT_HEADER,
+    LOCAL_HOSTS,
+    TEST_CLIENT_HOST,
+    host_guard,
+    local_origins,
+    request_guard,
+    security_headers,
+)
 from app.core.logging import access_log_middleware, configure_logging
 from app.core.request_context import REQUEST_ID_HEADER, request_id_middleware
 from app.db.engine import Database, run_migrations
+from app.services.owner import ensure_local_owner
 from app.storage.filestore import FileStore
 from app.worker.handlers import HANDLERS
 from app.worker.runner import TaskRunner
 
 VITE_DEV_ORIGIN = "http://localhost:5173"
+TEST_CLIENT_ORIGIN = "http://testserver"
 
 
 def create_app(settings: Settings | None = None, *, start_worker: bool = True) -> FastAPI:
@@ -39,12 +49,15 @@ def create_app(settings: Settings | None = None, *, start_worker: bool = True) -
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         db = Database.from_settings(settings)
         run_migrations(db.engine)
+        with db.session_factory() as session:
+            owner_id = ensure_local_owner(session).id
         runner = TaskRunner(db, HANDLERS)
         runner.recover_interrupted()
         if start_worker:
             runner.start()
         app.state.settings = settings
         app.state.db = db
+        app.state.owner_id = owner_id
         app.state.file_store = FileStore(settings.data_dir / "files")
         app.state.task_runner = runner
         try:
@@ -66,10 +79,15 @@ def create_app(settings: Settings | None = None, *, start_worker: bool = True) -
     register_error_handlers(app)
 
     # Middleware runs outermost-last-added. Effective order for a request:
-    # CORS (dev) → request ID → security headers → access log → host guard → route.
+    # CORS (dev) → request ID → security headers → access log → host guard → request guard → route.
     allowed_hosts = set(LOCAL_HOSTS)
+    allowed_origins = local_origins(settings.port)
+    if not settings.is_production:
+        allowed_origins.add(VITE_DEV_ORIGIN)
     if settings.env is Environment.TEST:
         allowed_hosts.add(TEST_CLIENT_HOST)
+        allowed_origins.add(TEST_CLIENT_ORIGIN)
+    app.middleware("http")(request_guard(allowed_origins))
     app.middleware("http")(host_guard(allowed_hosts))
     app.middleware("http")(access_log_middleware)
     app.middleware("http")(security_headers(docs_enabled=docs_enabled))
@@ -82,7 +100,7 @@ def create_app(settings: Settings | None = None, *, start_worker: bool = True) -
             allow_origins=[VITE_DEV_ORIGIN],
             allow_credentials=True,
             allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-            allow_headers=["Content-Type", "X-Traid-CSRF"],
+            allow_headers=["Content-Type", CLIENT_HEADER],
             expose_headers=[REQUEST_ID_HEADER],
         )
 

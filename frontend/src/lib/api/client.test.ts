@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { ApiError, apiRequest, NetworkError, setCsrfToken } from './client';
+import { ApiError, apiRequest, NetworkError } from './client';
 
 function mockFetch(status: number, body: unknown) {
   // A fresh Response per call: a body can only be read once.
@@ -17,7 +17,6 @@ function mockFetch(status: number, body: unknown) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  setCsrfToken(null);
 });
 
 describe('apiRequest', () => {
@@ -38,17 +37,16 @@ describe('apiRequest', () => {
     expect(error).toMatchObject({ status: 404, code: 'NOT_FOUND', requestId: 'abc' });
   });
 
-  it('sends the CSRF header only on mutating requests', async () => {
+  it('sends the client header only on mutating requests', async () => {
     const fetchMock = mockFetch(200, { data: null });
-    setCsrfToken('token-123');
 
     await apiRequest('/health');
     await apiRequest('/jobs', { method: 'POST', body: { a: 1 } });
 
     const getHeaders = fetchMock.mock.calls[0]?.[1]?.headers as Record<string, string>;
     const postHeaders = fetchMock.mock.calls[1]?.[1]?.headers as Record<string, string>;
-    expect(getHeaders['X-Traid-CSRF']).toBeUndefined();
-    expect(postHeaders['X-Traid-CSRF']).toBe('token-123');
+    expect(getHeaders['X-Traid-Client']).toBeUndefined();
+    expect(postHeaders['X-Traid-Client']).toBe('web');
   });
 
   it('treats a success response without a data envelope as an error', async () => {

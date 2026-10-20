@@ -198,7 +198,7 @@ Export ─▶ GET /jobs/{id}/export ─▶ encoded file (format/DPI/ICC preserve
 ## 6. Database interaction
 
 - SQLAlchemy 2.0 ORM, synchronous sessions (SQLite + single worker; simpler than async and fast enough).
-- One `Session` per request via FastAPI dependency; services own transaction boundaries with `app.db.transaction.transaction(session)`: it begins and commits when no transaction is open, and joins the caller's transaction when one is (so a service can call another service atomically).
+- One `Session` per request via FastAPI dependency; services own transaction boundaries with `app.db.transaction.transaction(session)`: it begins and commits when no transaction is open, takes over and commits a transaction that earlier reads auto-began (e.g. loading the current user), and joins an enclosing `transaction()` block or a caller's explicit `session.begin()` (so a service can call another service atomically).
 - Timestamps use the `UtcDateTime` column type (ISO-8601 UTC with `Z`, naive datetimes rejected); JSON columns use `JsonText` + a `json_valid` CHECK. Enum CHECK constraints are generated from the Python enums (`check_in`), and a test compares ORM models against migrations so they cannot drift.
 - Worker uses its own session per task stage; progress updates commit independently of task results.
 - SQLite pragmas on connect: `journal_mode=WAL`, `foreign_keys=ON`, `busy_timeout=5000`, `synchronous=NORMAL`.

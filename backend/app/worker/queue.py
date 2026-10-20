@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from sqlalchemy.orm import Session
 
 from app.core.clock import utcnow
 from app.core.errors import Conflict, ErrorCode, NotFound, TooManyRequests
+from app.core.pagination import decode_cursor
 from app.db.models import Task
 from app.db.models.enums import TaskStatus, TaskSubject, TaskType
 from app.db.transaction import transaction
 from app.repositories import tasks as tasks_repo
+from app.repositories.pagination import split_page
 
 MAX_QUEUED_PER_USER = 200  # API.md §6
 
@@ -41,6 +44,28 @@ def enqueue(
                 cancel_requested=0,
             ),
         )
+
+
+ACTIVE_STATUSES = (TaskStatus.QUEUED, TaskStatus.RUNNING)
+
+
+def list_tasks(
+    session: Session,
+    owner_id: str,
+    *,
+    statuses: Sequence[TaskStatus] | None,
+    cursor: str | None,
+    limit: int,
+) -> tuple[list[Task], str | None]:
+    """Owner's tasks, newest first. Defaults to active (queued/running) tasks."""
+    rows = tasks_repo.list_for_owner(
+        session,
+        owner_id,
+        statuses=[status.value for status in (statuses or ACTIVE_STATUSES)],
+        cursor=decode_cursor(cursor) if cursor else None,
+        limit=limit,
+    )
+    return split_page(rows, limit)
 
 
 def get_task(session: Session, owner_id: str, task_id: str) -> Task:

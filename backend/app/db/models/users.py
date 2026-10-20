@@ -26,7 +26,8 @@ class User(Base):
     id: Mapped[str] = id_column()
     username: Mapped[str] = mapped_column(String(32), unique=True)
     display_name: Mapped[str] = mapped_column(String(60))
-    password_hash: Mapped[str] = mapped_column(String(255))
+    # NULL in local mode (no sign-in, PRD D-03).
+    password_hash: Mapped[str | None] = mapped_column(String(255))
     role: Mapped[str] = mapped_column(String(16), default=UserRole.OWNER.value)
     is_active: Mapped[int] = mapped_column(Integer, default=1)
     failed_login_count: Mapped[int] = mapped_column(Integer, default=0)

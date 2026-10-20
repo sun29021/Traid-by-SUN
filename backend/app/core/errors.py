@@ -138,6 +138,13 @@ def _envelope(
     return {"error": error}
 
 
+def error_response(
+    status_code: int, code: ErrorCode, message: str, details: dict[str, Any] | None = None
+) -> JSONResponse:
+    """Error envelope for code paths outside route handlers (e.g. middleware)."""
+    return JSONResponse(status_code=status_code, content=_envelope(code, message, details))
+
+
 _HTTP_STATUS_CODES: dict[int, ErrorCode] = {
     401: ErrorCode.UNAUTHENTICATED,
     403: ErrorCode.FORBIDDEN,

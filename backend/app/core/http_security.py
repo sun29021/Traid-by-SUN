@@ -1,6 +1,8 @@
-"""HTTP security middleware (ARCHITECTURE.md §14).
+"""HTTP security middleware (ARCHITECTURE.md §7.1, §14).
 
 - Host allow-list: blocks DNS-rebinding attacks against the local server.
+- Local request guard: only Traid's own page may call the API. There is no sign-in
+  (PRD D-03), so this is what stops other websites from changing data.
 - Security headers on every response; API responses are never cached.
 """
 
@@ -8,17 +10,19 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterable
 
-from fastapi.responses import JSONResponse
 from starlette.requests import Request
 from starlette.responses import Response
 
-from app.core.errors import ErrorCode
-from app.core.request_context import get_request_id
+from app.core.errors import ErrorCode, error_response
 
 Middleware = Callable[[Request, Callable[[Request], Awaitable[Response]]], Awaitable[Response]]
 
 LOCAL_HOSTS = frozenset({"127.0.0.1", "localhost", "[::1]"})
 TEST_CLIENT_HOST = "testserver"
+
+CLIENT_HEADER = "X-Traid-Client"
+CLIENT_HEADER_VALUE = "web"
+STATE_CHANGING_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 CONTENT_SECURITY_POLICY = (
     "default-src 'self'; img-src 'self' blob: data:; style-src 'self'; "
@@ -44,6 +48,10 @@ def hostname(host_header: str) -> str:
     return host.rsplit(":", 1)[0] if host.count(":") == 1 else host
 
 
+def local_origins(port: int) -> set[str]:
+    return {f"http://{host}:{port}" for host in LOCAL_HOSTS}
+
+
 def host_guard(allowed_hosts: Iterable[str]) -> Middleware:
     allowed = frozenset(allowed_hosts)
 
@@ -51,16 +59,35 @@ def host_guard(allowed_hosts: Iterable[str]) -> Middleware:
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         if hostname(request.headers.get("host", "")) not in allowed:
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "error": {
-                        "code": ErrorCode.FORBIDDEN.value,
-                        "message": "Invalid Host header",
-                        "request_id": get_request_id(),
-                    }
-                },
-            )
+            return error_response(400, ErrorCode.FORBIDDEN, "Invalid Host header")
+        return await call_next(request)
+
+    return middleware
+
+
+def request_guard(allowed_origins: Iterable[str]) -> Middleware:
+    """Reject API calls that do not come from Traid's own page.
+
+    1. A present `Origin` must be one of ours (covers cross-site fetch and form posts).
+    2. State-changing requests must carry `X-Traid-Client: web`. Browsers send custom
+       headers cross-origin only after a CORS preflight, which Traid never approves.
+    """
+    allowed = frozenset(allowed_origins)
+
+    async def middleware(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        if request.url.path.startswith("/api/"):
+            origin = request.headers.get("origin")
+            if origin is not None and origin not in allowed:
+                return error_response(
+                    403, ErrorCode.CSRF_FAILED, "Requests from other websites are not allowed"
+                )
+            if (
+                request.method in STATE_CHANGING_METHODS
+                and request.headers.get(CLIENT_HEADER) != CLIENT_HEADER_VALUE
+            ):
+                return error_response(403, ErrorCode.CSRF_FAILED, f"Missing {CLIENT_HEADER} header")
         return await call_next(request)
 
     return middleware

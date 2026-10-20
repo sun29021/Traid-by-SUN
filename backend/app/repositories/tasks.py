@@ -8,8 +8,10 @@ from datetime import datetime
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
+from app.core.pagination import Cursor
 from app.db.models import Task
 from app.db.models.enums import TaskStatus
+from app.repositories.pagination import before
 
 ACTIVE = (TaskStatus.QUEUED.value, TaskStatus.RUNNING.value)
 
@@ -18,12 +20,20 @@ def get(session: Session, owner_id: str, task_id: str) -> Task | None:
     return session.scalar(select(Task).where(Task.id == task_id, Task.owner_id == owner_id))
 
 
-def list_active(session: Session, owner_id: str) -> Sequence[Task]:
-    return session.scalars(
-        select(Task)
-        .where(Task.owner_id == owner_id, Task.status.in_(ACTIVE))
-        .order_by(Task.created_at, Task.id)
-    ).all()
+def list_for_owner(
+    session: Session,
+    owner_id: str,
+    *,
+    statuses: Sequence[str],
+    cursor: Cursor | None,
+    limit: int,
+) -> Sequence[Task]:
+    """Newest first; fetches `limit + 1` rows so the caller can tell if more exist."""
+    query = select(Task).where(Task.owner_id == owner_id, Task.status.in_(statuses))
+    if cursor is not None:
+        query = query.where(before(Task.created_at, Task.id, cursor))
+    query = query.order_by(Task.created_at.desc(), Task.id.desc()).limit(limit + 1)
+    return session.scalars(query).all()
 
 
 def count_queued(session: Session, owner_id: str) -> int:
