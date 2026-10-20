@@ -76,7 +76,7 @@ Assumption **A-01:** MVP is single-user on one Windows PC. Multi-user is out of 
 ### J1 — First run
 1. Owner launches Traid.
 2. Traid checks that the AI models are present and shows engine status (CPU/GPU).
-3. Owner creates the local owner account (username + password) and acknowledges the Acceptable Use notice (§10, rule 6).
+3. Owner acknowledges the Acceptable Use notice (§10, rule 6). No account or password is needed (D-03); Traid creates the single local owner automatically.
 4. Owner lands on Home with an empty state that points to "Create your first Style Profile".
 
 ### J2 — Train a Style Profile
@@ -124,8 +124,8 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 ### Account & system
 | ID | Story | Pri | Acceptance criteria |
 |----|-------|-----|---------------------|
-| US-01 | As the owner, I create a local account on first run so my work is protected on a shared PC. | M | Setup is only available while no user exists; password ≥ 10 chars; Acceptable Use must be acknowledged. |
-| US-02 | As the owner, I sign in and out; my session expires after inactivity. | M | Wrong credentials show a generic error; 5 failed attempts → 5-minute lockout; idle expiry default 12 h. |
+| US-01 | As the owner, I open Traid and start working without signing in; on first run I acknowledge the Acceptable Use notice once. | M | No login screen. AUP acknowledgement stored once. Only Traid's own page can change data (local request guard, ARCHITECTURE.md §7). |
+| US-02 | *(Deferred, D-03)* As the owner, I can turn on a password lock and sign in/out with session expiry. | C | Wrong credentials show a generic error; 5 failed attempts → 5-minute lockout; idle expiry default 12 h. |
 | US-03 | As the owner, I see whether the engine runs on CPU or GPU and whether models are installed. | M | Settings → Engine shows model names, versions, status, device. Missing model → clear fix instructions. |
 
 ### Style Profiles
@@ -171,8 +171,8 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 | US-52 | See learning stats for a profile. | S | Acceptance rate, top rejected glyphs, coverage gaps. |
 | US-53 | Add real characters from target images to the glyph bank. | S | Offered after accept; owner confirms each. Only original (unedited) pixels are ever used. |
 | US-54 | Create and restore a backup of all data. | S | One-click backup to ZIP; documented restore procedure. |
-| US-55 | Change password and export defaults. | M | — |
-| US-56 | See who built the app. | M | "Designed & developed by Xavier Sun" visible in the app shell, sign-in screen and About. |
+| US-55 | Change export defaults (password settings arrive with the deferred sign-in, US-02). | M | — |
+| US-56 | See who built the app. | M | "Designed & developed by Xavier Sun" visible in the app shell, Welcome screen and About. |
 
 ---
 
@@ -232,7 +232,7 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 | **Batch throughput** | ≥ 6 results/minute on CPU for same-template batches (removal reused across items). |
 | **Quality** | Unchanged pixels outside mask+feather: bit-identical for PNG/TIFF. OCR read-back accuracy ≥ 98% on the evaluation set. See §18 for blind-test target. |
 | **Privacy** | 100% local processing. No telemetry, analytics or cloud calls at runtime. Network is used only to download model files during setup (checksums verified). |
-| **Security** | Server binds to `127.0.0.1` only; password hashed with Argon2id; sessions via HttpOnly cookie; CSRF protection; upload validation; no secrets in the frontend. |
+| **Security** | Server binds to `127.0.0.1` only; Host allow-list (DNS rebinding); local request guard so other websites cannot change data or read images (Origin check + required custom header + same-origin resource policy); upload validation; no secrets in the frontend. Password sign-in is deferred (D-03). |
 | **Reliability** | Background tasks persisted; an app restart marks interrupted tasks as failed with a retry option; no data loss on crash (SQLite WAL). |
 | **Usability** | Core journey J3 achievable in ≤ 5 interactions after image drop (select profile → confirm region → type token → generate → accept). Every editor action has a keyboard shortcut. |
 | **Accessibility** | WCAG 2.2 AA for all non-canvas UI; canvas content mirrored in accessible lists. |
@@ -257,8 +257,8 @@ Priority: **M** = Must (MVP), **S** = Should (MVP if time allows, planned), **C*
 
 | # | Screen | Purpose | Key contents |
 |---|--------|---------|--------------|
-| S1 | **Setup** (first run only) | Create owner account, accept Acceptable Use, check engine. | Engine check list, account form, AUP checkbox. |
-| S2 | **Sign in** | Authenticate. | Username, password, credit line. |
+| S1 | **Welcome** (first run only) | Check engine, accept Acceptable Use. | Engine check list, AUP checkbox, credit line. |
+| S2 | **Sign in** | *Deferred (D-03).* Authenticate when the optional password lock is enabled. | Username, password, credit line. |
 | S3 | **Home** | Start work fast. | Drop zone ("Drop a target image"), profile picker, recent jobs, profile readiness summary. |
 | S4 | **Profiles** | List profiles. | Cards/rows: name, status, glyph count, coverage %, last used. Create button. |
 | S5 | **Profile detail** | Manage one profile. | Tabs: Overview (stats, learning), References (upload, per-image status), Glyphs (review grid), Coverage (matrix), Settings (charset, pattern, layout, thresholds). |
@@ -276,7 +276,7 @@ MVP has one role. The data model keeps a `role` field so a second role can be ad
 
 | Capability | Owner (MVP) | Editor (Phase 2, not built) |
 |------------|:-----------:|:---------------------------:|
-| Sign in / out, change own password | ✅ | ✅ |
+| Sign in / out, change own password (deferred, D-03) | — | — |
 | Create / edit / archive profiles | ✅ | ❌ |
 | Upload references, review glyphs | ✅ | ✅ |
 | Run edits & batches, accept / reject / export | ✅ | ✅ |
@@ -285,7 +285,7 @@ MVP has one role. The data model keeps a `role` field so a second role can be ad
 | Settings, backup, audit log | ✅ | ❌ |
 | Manage users | ❌ (not in MVP) | ❌ |
 
-All checks are enforced server-side.
+All checks are enforced server-side. Without sign-in (D-03), every request from Traid's own page acts as the single local owner; ownership columns stay in the data so sign-in and roles can be added later without reshaping data.
 
 ---
 
@@ -342,14 +342,14 @@ No webhooks, payments, email or third-party accounts.
 | Batch | Progress bar, count, ETA | "Add token values to start" | Item failures listed; batch continues; summary at end |
 | History | Skeleton table | "No jobs match these filters" + clear filters | Retry |
 | Export | Button spinner | — | Disk full / permission → message with path |
-| Session | — | — | Expired → redirect to Sign in, return to the same page after login |
+| First run | — | — | Acceptable Use not yet acknowledged → Welcome screen, then back to the requested page |
 | Server unreachable | — | — | Full-width banner "Traid engine is not running" + retry |
 
 ---
 
 ## 16. MVP scope
 
-**In MVP (Must):** J1, J2, J3, J5; US marked **M**; FR-E01…E15, FR-P01…P05, FR-U01, FR-U03…U06; local owner account; audit log; export with metadata marker; dark UI.
+**In MVP (Must):** J1, J2, J3, J5; US marked **M**; FR-E01…E15, FR-P01…P05, FR-U01, FR-U03…U06; single local owner without sign-in (D-03); audit log; export with metadata marker; dark UI.
 
 **MVP if time allows (Should):** Batch (J4), glyph variant swap, undo/redo, known-text labels, glyph candidates from targets, learning stats view, backup/restore.
 
@@ -397,7 +397,7 @@ No webhooks, payments, email or third-party accounts.
 |----|----------|----------------|
 | D-01 | Product name "Traid" (from folder "Traid by SUN"). | Approve or rename. |
 | D-02 | Platform: local web app (browser UI + local Python engine) vs. packaged desktop app. | Local web app for MVP; desktop installer wrapper later. |
-| D-03 | Require sign-in for a local single-user app. | Yes (protects data on shared PCs; required for audit trail). |
+| D-03 | Require sign-in for a local single-user app. | **Changed 2026-10-20 by owner: no sign-in for now.** A single local owner is created automatically; a local request guard protects the API from other websites. Optional password lock (US-02) can be added later. |
 | D-04 | MVP engine = real-glyph transplant + classical/AI harmonization; generative AI engine deferred to Phase 2. | Approve. It is more reliable for a single known font and runs on CPU. |
 | D-05 | Batch mode in MVP as "Should". | Approve. |
 | D-06 | Exports carry an invisible Traid edit marker in file metadata (on by default, owner-switchable) + audit log always on. | Approve. |

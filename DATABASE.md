@@ -41,7 +41,7 @@ Why SQLite: one local user, one process, one worker thread. It is transactional,
 | id | TEXT | no | — | PK |
 | username | TEXT | no | — | UNIQUE (case-insensitive: stored lower-case), 3–32 chars `^[a-z0-9_.-]+$` |
 | display_name | TEXT | no | — | 1–60 chars |
-| password_hash | TEXT | no | — | Argon2id encoded string |
+| password_hash | TEXT | yes | — | Argon2id encoded string. NULL in local mode (no sign-in, PRD D-03); migration `0003_local_owner` makes it nullable |
 | role | TEXT | no | `'owner'` | CHECK in (`owner`, `editor`) — only `owner` used in MVP |
 | is_active | INTEGER | no | 1 | |
 | failed_login_count | INTEGER | no | 0 | CHECK ≥ 0 |
@@ -239,7 +239,7 @@ PK (`job_id`, `position`). Rows are replaced on every render.
 |--------|------|------|-------|
 | id | TEXT | no | PK |
 | user_id | TEXT | yes | FK → users.id ON DELETE SET NULL (NULL for failed logins of unknown users) |
-| action | TEXT | no | Closed list, e.g. `auth.setup`, `auth.login`, `auth.login_failed`, `auth.logout`, `auth.password_changed`, `profile.created`, `profile.archived`, `profile.deleted`, `job.accepted`, `job.rejected`, `job.exported`, `job.deleted`, `batch.exported`, `settings.updated`, `backup.created` |
+| action | TEXT | no | Closed list, e.g. `system.aup_accepted`, `auth.setup`, `auth.login`, `auth.login_failed`, `auth.logout`, `auth.password_changed`, `profile.created`, `profile.archived`, `profile.deleted`, `job.accepted`, `job.rejected`, `job.exported`, `job.deleted`, `batch.exported`, `settings.updated`, `backup.created` |
 | subject_type | TEXT | yes | |
 | subject_id | TEXT | yes | |
 | details | TEXT (JSON) | no | Non-sensitive context (IDs, counts, format). Never passwords, tokens, CSRF secrets. |

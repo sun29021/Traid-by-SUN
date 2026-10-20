@@ -320,10 +320,11 @@ Rules:
 
 ## 11. Page-level layout guidance
 
-### 11.1 Setup (first run) & Sign in
-- Centred 360 px column on surface-0. Product wordmark "Traid" (Plex Sans 600, 24 px) with "by Xavier Sun" beneath in secondary.
-- Setup is a 3-step vertical stepper: **Engine check** (list of models/device with status rows) → **Owner account** → **Acceptable use** (short text + required checkbox). Primary button "Finish setup".
-- Footer of both screens: "Traid · Designed & developed by Xavier Sun".
+### 11.1 Welcome (first run)
+- No sign-in in the MVP (PRD D-03). Centred 360 px column on surface-0. Product wordmark "Traid" (Plex Sans 600, 24 px) with "by Xavier Sun" beneath in secondary.
+- Two blocks: **Engine check** (list of models/device with status rows) → **Acceptable use** (short text + required checkbox). Primary button "Start using Traid".
+- Footer: "Traid · Designed & developed by Xavier Sun".
+- The deferred Sign-in screen (US-02), if built later, uses the same layout with username/password fields.
 
 ### 11.2 Home
 - Two-column (8/4).
@@ -416,7 +417,7 @@ Rules: no horizontal page scroll at any supported width; tables scroll horizonta
 
 The credit "Xavier Sun" must appear in:
 1. Nav rail bottom: "by Xavier Sun" (`--type-micro`, secondary).
-2. Setup and Sign-in footers: "Traid · Designed & developed by Xavier Sun".
+2. Welcome screen footer (and Sign-in, if it is built later): "Traid · Designed & developed by Xavier Sun".
 3. Settings → About: full credit block.
 4. Browser tab title suffix: "— Traid".
 

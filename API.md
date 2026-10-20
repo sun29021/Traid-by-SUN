@@ -54,10 +54,13 @@
 - Filters are query parameters documented per endpoint; unknown filters → `422`.
 
 ### 1.6 Authentication & authorization
-- Session cookie `traid_session` (HttpOnly, SameSite=Strict). Obtained by `/auth/login` or `/auth/setup`.
-- **CSRF:** all `POST/PUT/PATCH/DELETE` (except `/auth/login`, `/auth/setup`) require header `X-Traid-CSRF: <csrf_token>` from `GET /auth/me`. Missing/mismatch → `403 CSRF_FAILED`.
-- All endpoints require authentication except those marked **Public**.
-- MVP: all authenticated endpoints require role `owner`. Ownership enforced server-side; foreign resources → `404`.
+**MVP: local mode without sign-in (PRD D-03, ARCHITECTURE.md §7.1).**
+- No login. Every request acts as the single local owner. Ownership is still enforced server-side; foreign resources → `404`.
+- **Request guard:** a request with an `Origin` header that is not Traid's own origin → `403 CSRF_FAILED`. All `POST/PUT/PATCH/DELETE` requests must send `X-Traid-Client: web`; missing → `403 CSRF_FAILED`.
+- Until the Acceptable Use notice is acknowledged (`POST /system/welcome`), endpoints other than health, system status and welcome return `403 FORBIDDEN` with `details.reason = "aup_required"`.
+- "**Public**" below means callable before the AUP acknowledgement.
+
+**Later (US-02, not MVP):** session cookie `traid_session` + `X-Traid-CSRF` token from `GET /auth/me`, as specified in §3.2.
 
 ### 1.7 Background tasks
 Endpoints that start heavy work return `202` with a **Task**:
@@ -123,7 +126,13 @@ Clients poll `GET /tasks/{id}` (recommended 500 ms) until `succeeded | failed | 
 | POST | `/system/backups` | Owner | Start backup task → `202` Task. |
 | GET | `/system/backups` | Owner | List backups (`FileRef` + created_at + integrity result). |
 
-### 3.2 Auth
+### 3.2a Welcome (MVP, replaces account setup)
+| Method | Path | Auth | Request | Response |
+|--------|------|------|---------|----------|
+| GET | `/system/welcome` | Public | — | `{ "aup_accepted": bool, "owner": { display_name } }` |
+| POST | `/system/welcome` | Public | `{ "accept_aup": true }` | `200` same shape; idempotent. Audit `system.aup_accepted`. |
+
+### 3.2 Auth (deferred — optional password lock, US-02; not built in MVP)
 | Method | Path | Auth | Request | Response |
 |--------|------|------|---------|----------|
 | GET | `/auth/status` | Public | — | `{ "setup_required": bool, "authenticated": bool }` |
@@ -250,8 +259,7 @@ Local single user, so limits target brute force and runaway clients, not traffic
 
 | Scope | Limit | Response |
 |-------|-------|----------|
-| `POST /auth/login` | 10 / minute per client IP; account lock after 5 consecutive failures for 5 min | `429` (`Retry-After`) / `423` |
-| `POST /auth/setup` | 5 / minute | `429` |
+| `POST /auth/login` (deferred) | 10 / minute per client IP; account lock after 5 consecutive failures for 5 min | `429` (`Retry-After`) / `423` |
 | Task-creating endpoints | Max 200 queued tasks per user; max 1 running batch | `429 RATE_LIMITED` / `409` |
 | Upload endpoints | 30 requests / minute | `429` |
 
@@ -279,4 +287,4 @@ MVP requires no API keys or secrets.
 - Worker crash/restart → interrupted tasks become `failed` with `TASK_INTERRUPTED`; clients see this via polling and can `retry`.
 - Disk full during write → `500 DISK_FULL` with a path-free message; partially written files are removed.
 - All multi-row changes (accept + learning + audit; bulk glyph updates; profile delete) run in single DB transactions.
-- Frontend handles: `401` → redirect to Sign in (preserve return URL); `403 CSRF_FAILED` → refetch `/auth/me` once and retry; `503` → engine-offline banner; network error → retry twice for GETs, never auto-retry POSTs.
+- Frontend handles: `403` with `aup_required` → Welcome screen; `503` → engine-offline banner; network error → retry twice for GETs, never auto-retry POSTs.

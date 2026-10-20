@@ -210,13 +210,25 @@ Export ─▶ GET /jobs/{id}/export ─▶ encoded file (format/DPI/ICC preserve
 
 ## 7. Authentication & authorization
 
-- **Model:** local accounts; MVP has exactly one `owner` user created by first-run setup. `POST /auth/setup` is accepted only while the `users` table is empty.
-- **Passwords:** Argon2id (argon2-cffi defaults, time_cost ≥ 3, memory ≥ 64 MiB). Minimum length 10, maximum 128; no composition rules; reject the username as password.
-- **Sessions:** opaque 32-byte random token in cookie `traid_session` (`HttpOnly`, `SameSite=Strict`, `Path=/`, `Secure` when served over HTTPS). Only the SHA-256 of the token is stored. Idle timeout 12 h (sliding), absolute lifetime 7 days. Logout revokes the row.
-- **CSRF:** `SameSite=Strict` + required header `X-Traid-CSRF` on all state-changing requests, matched against a per-session CSRF secret returned by `GET /auth/me` (synchronizer token). Requests without it → 403.
-- **Brute force:** 5 failed logins → account locked for 5 minutes; per-IP limiter on `/auth/login`.
-- **Authorization:** FastAPI dependency `current_user` on every router except `/health`, `/auth/status`, `/auth/setup`, `/auth/login`. A `require_role("owner")` dependency guards owner-only endpoints (all MVP endpoints, prepared for Editor role). Ownership is enforced in services/repositories: resources not owned by the user return **404** (no existence leak).
-- Frontend `RequireAuth` route guard is a UX convenience only; the server is the authority.
+### 7.1 MVP: local mode, no sign-in (PRD D-03, changed 2026-10-20)
+
+- **Model:** exactly one `owner` user, created automatically at startup if the `users` table is empty (username `owner`, display name "Xavier Sun", no password). Every request acts as this user via the `current_user` dependency, so services and repositories keep their `owner_id` scoping unchanged.
+- **Local request guard** (replaces sessions/CSRF while there is no login). Because any website open in the browser can send requests to `127.0.0.1`, the API accepts a request only if:
+  1. the Host header is local (already enforced, DNS-rebinding protection);
+  2. the `Origin` header, when present, is Traid's own origin (`http://127.0.0.1:8765`, `http://localhost:8765`, and `http://localhost:5173` in development);
+  3. every state-changing request (`POST/PUT/PATCH/DELETE`) carries the header `X-Traid-Client: web`. Browsers only let other sites send custom headers after a CORS preflight, which Traid never approves, so form posts and `fetch` calls from other origins fail with `403 CSRF_FAILED`.
+  Reads of images are protected by `Cross-Origin-Resource-Policy: same-origin` (already set) and the absence of CORS headers for other origins.
+- **Acceptable Use:** acknowledged once on the Welcome screen; stored as `users.aup_accepted_at`. Until acknowledged, engine endpoints return `403 FORBIDDEN` with `details.reason = "aup_required"`.
+- **Not protected against:** other programs running as the same Windows user (they could read `data/` directly anyway). Recommendation for shared PCs: a separate Windows account + BitLocker.
+
+### 7.2 Later: optional password lock (US-02, not in MVP)
+
+When enabled, the design below applies on top of 7.1 without changing data ownership:
+- **Passwords:** Argon2id (argon2-cffi defaults, time_cost ≥ 3, memory ≥ 64 MiB). Length 10–128; no composition rules; reject the username as password.
+- **Sessions:** opaque 32-byte random token in cookie `traid_session` (`HttpOnly`, `SameSite=Strict`, `Path=/`). Only the SHA-256 is stored. Idle timeout 12 h (sliding), absolute 7 days. Logout revokes the row.
+- **CSRF:** `X-Traid-CSRF` synchronizer token from `GET /auth/me` replaces the static `X-Traid-Client` header.
+- **Brute force:** 5 failed logins → 5-minute lock; per-IP limiter on `/auth/login`.
+- **Authorization:** `current_user` resolves from the session; `require_role("owner")` guards owner-only endpoints; foreign resources return **404**. The `sessions` table already exists for this.
 
 ---
 
@@ -369,7 +381,7 @@ Dev: Vite on `5173` proxies `/api` to `8765`. Prod: one process on `8765` servin
 | Boundary | Control |
 |----------|---------|
 | Network | Bind `127.0.0.1` only; `Host` header allow-list (`127.0.0.1`, `localhost`) to block DNS-rebinding; no CORS in prod (same origin); dev CORS limited to `http://localhost:5173`. |
-| Browser ↔ API | HttpOnly SameSite=Strict session cookie; CSRF header; security headers: CSP (`default-src 'self'; img-src 'self' blob: data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'`), `X-Content-Type-Options`, `Referrer-Policy: no-referrer`. |
+| Browser ↔ API | Local request guard (§7.1: Origin check + required `X-Traid-Client` header on writes; session cookie + CSRF token once the optional sign-in exists); security headers: CSP (`default-src 'self'; img-src 'self' blob: data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'`), `X-Content-Type-Options`, `Referrer-Policy: no-referrer`. |
 | Uploads | Size limit; extension and magic-byte check; full decode with Pillow under `MAX_PIXELS`; re-encoding of thumbnails; filenames never used as paths (content-hash paths only); original filename stored as display text, sanitized. |
 | File serving | By file ID only, ownership checked; resolved path must be inside `data/files` (path traversal guard). |
 | Database | Parameterized queries via ORM only; no raw string SQL; owner scoping. |

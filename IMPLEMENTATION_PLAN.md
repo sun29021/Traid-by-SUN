@@ -47,20 +47,26 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 - **Done when:** app starts with migrations applied, logs in JSON, rejects non-local Host headers; all tests pass.
 - **Status (2026-10-20): DONE.** Migrations `0001_initial_auth`, `0002_files_tasks`; file storage + upload validation (`storage/`, `services/files.py`); task queue (`worker/queue.py`) + single-thread runner (`worker/runner.py`, handler registry empty until Phase 5); Host guard, CSP and security headers. No new HTTP endpoints: `/tasks/*` and upload endpoints need authentication, so they arrive with Phase 2 and Phase 5 per API.md. Deferred to 13.3: automatic pre-migration backup. Dev seed data (DATABASE.md §10) needs profiles, so it arrives in Phase 5.
 
-## Phase 2 — Authentication & audit
+## Phase 2 — Local owner, request guard & audit
 
-**Goal:** first-run setup, sign in/out, sessions, CSRF, lockout, audit log (PRD US-01, US-02, US-55; API §3.2).
+**Rescoped 2026-10-20:** the owner chose no sign-in for now (PRD D-03). Password sign-in moved to the optional "Later" section at the end.
+
+**Goal:** single local owner, protection from other websites, Acceptable Use acknowledgement, audit log (PRD US-01; ARCHITECTURE §7.1; API §1.6, §3.2a).
 
 | Task | Detail |
 |------|--------|
-| 2.1 | `core/security.py`: Argon2id hashing, token generation, SHA-256 hashing. |
-| 2.2 | `services/auth.py` + repositories: setup (only when no users), login, lockout, logout, change password (revoke other sessions), session sliding expiry. |
-| 2.3 | `api/deps.py`: `current_user`, `require_role("owner")`, CSRF check; routers for `/auth/*`. |
-| 2.4 | In-memory rate limiter for login/setup. |
-| 2.5 | `services/audit.py` + `GET /audit`. |
+| 2.1 | Migration `0003_local_owner`: `users.password_hash` nullable. Startup creates the single owner (`owner`, "Xavier Sun") if no user exists. |
+| 2.2 | `api/deps.py`: DB session dependency, `current_user` (the local owner), `require_aup`. |
+| 2.3 | Local request guard middleware: Origin allow-list + required `X-Traid-Client: web` on writes → `403 CSRF_FAILED`. Frontend client sends the header. |
+| 2.4 | `GET/POST /system/welcome`, `GET /system/status` (owner-level status without models until Phase 4). |
+| 2.5 | `services/audit.py` + `GET /audit` (cursor pagination); `GET /tasks/{id}`, `GET /tasks`, cancel, retry endpoints on top of the Phase 1 queue. |
 
-- **Tests:** setup once only (409 after); login success/invalid/locked/429; cookie flags; CSRF missing → 403; expired/revoked session → 401; password change revokes sessions; audit events written and immutable.
-- **Done when:** all `/auth/*` endpoints behave per API.md and every later router can depend on `current_user`.
+- **Tests:** owner auto-created once; foreign Origin → 403; write without header → 403; form-style cross-site POST → 403; AUP gate → 403 until accepted, then 200; audit events written and immutable; task endpoints incl. cancel/retry and 404 for unknown IDs.
+- **Done when:** every later router can depend on `current_user` and `require_aup`; no other website can change data.
+
+## Later (optional) — Password lock (PRD US-02)
+
+Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page and `RequireAuth` exactly as ARCHITECTURE §7.2 and API §3.2 describe. Not scheduled; build only when the owner asks.
 
 ## Phase 3 — Frontend shell & design system
 
@@ -70,13 +76,13 @@ Legend: **M** = Must (MVP), **S** = Should. Migration names match DATABASE.md §
 |------|--------|
 | 3.1 | `styles/tokens.css`, reset, bundled IBM Plex fonts. |
 | 3.2 | Primitives: Button, IconButton, Input, TokenInput (shell), Select, Checkbox, Toggle, Slider+NumberField, Badge, MetricRow, Table, Tabs, Dialog, Drawer, Toast, Banner, Tooltip, Skeleton, EmptyState, ProgressBar, DropZone. |
-| 3.3 | `lib/api` client: envelope parsing, `ApiError`, CSRF header, 401/403/503 handling; OpenAPI type generation script. |
+| 3.3 | `lib/api` client: envelope parsing, `ApiError`, `X-Traid-Client` header, 403 `aup_required` / 503 handling; OpenAPI type generation script. |
 | 3.4 | AppShell: nav rail (with "by Xavier Sun"), top bar, Tasks chip placeholder, engine-offline banner; router with placeholder pages; 404/forbidden pages. |
-| 3.5 | Setup page (3-step), Sign-in page, `RequireAuth`, session-expired redirect with return URL. |
+| 3.5 | Welcome page (engine check + Acceptable Use), shown until acknowledged. |
 
 - **Depends on:** Phase 2 API.
-- **Tests:** primitive state/a11y tests; api client error mapping; Playwright: first-run setup → home; sign-out → sign-in; axe check on auth pages.
-- **Done when:** owner can set up, sign in/out; all pages reachable as placeholders; no hard-coded style values (lint rule or review).
+- **Tests:** primitive state/a11y tests; api client error mapping; Playwright: first run → Welcome → accept → Home; axe check on Welcome.
+- **Done when:** first run shows Welcome, then the app; all pages reachable as placeholders; no hard-coded style values (lint rule or review).
 
 ## Phase 4 — Engine I: image I/O, models, detection, geometry
 
@@ -266,7 +272,7 @@ P4/P5 (engine + profiles backend) can proceed in parallel with P3 (frontend shel
 |-------------|-------|
 | 8. Project setup | Phase 0 (+ 1.1–1.3) |
 | 10. Database & backend connection | Phase 1, then migrations in 5/9/12 |
-| 11. Authentication & authorization | Phase 2 (+ 3.5) |
+| 11. Authentication & authorization | Phase 2 (local owner + request guard, no sign-in) and 3.5 (Welcome); password lock is optional "Later" |
 | 9. Feature development | One task at a time from Phases 3–13 |
 | 13. External API / service integration | 4.3 (model fetch) — no runtime external APIs |
 | 12. MCP connection | Not required by the architecture; only if you want dev tooling |
