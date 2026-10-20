@@ -300,8 +300,9 @@ Rules:
 | Zoom | Ctrl + wheel, pinch | `Ctrl+=` / `Ctrl+-`; `0` fit; `1` 100%; `2` 200%; `4` 400% |
 | Toggle before/after | Click toggle | `\` |
 | Split view | Drag slider | `S` |
+| Collapse regions / inspector | Panel buttons | `[` / `]` |
 | Mask overlay | Toggle | `M` |
-| Glyph boxes overlay | Toggle | `G` |
+| Text regions overlay | Toggle (toolbar) | — (`G` is reserved for "go to" navigation; the per-character box overlay was dropped in Phase 10) |
 | Select region | Click overlay or list row | `Tab` / `Shift+Tab` cycles regions |
 | Move corner handle | Drag | Select handle `1–4`, arrows 1 px, Shift+arrows 10 px |
 | Focus token input | — | `T` |

@@ -180,6 +180,13 @@
   padding: var(--space-6);
 }
 
-.content:focus {
+.content:focus,
+.fullBleed:focus {
   outline: none;
+}
+
+.fullBleed {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }

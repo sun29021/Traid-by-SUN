@@ -13,4 +13,9 @@ export const queryKeys = {
   references: (id: string) => ['profiles', id, 'references'] as const,
   glyphs: (id: string, filters: unknown) => ['profiles', id, 'glyphs', filters] as const,
   allGlyphs: (id: string) => ['profiles', id, 'glyphs'] as const,
+
+  jobs: ['jobs'] as const,
+  jobList: (filters: unknown) => ['jobs', 'list', filters] as const,
+  job: (id: string) => ['jobs', id] as const,
+  glyphVariants: (id: string, position: number) => ['jobs', id, 'variants', position] as const,
 };

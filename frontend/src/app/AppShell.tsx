@@ -16,10 +16,10 @@ const HEALTH_POLL_MS = 15_000;
 const TASKS_POLL_ACTIVE_MS = 2_000;
 const TASKS_POLL_IDLE_MS = 10_000;
 
-function useRouteTitle(): string {
+function useRouteHandle(): RouteHandle {
   const matches = useMatches();
   const handle = matches.at(-1)?.handle as RouteHandle | undefined;
-  return handle?.title ?? 'Traid';
+  return handle ?? { title: 'Traid' };
 }
 
 function useHealth() {
@@ -89,7 +89,7 @@ function TasksChip() {
 
 /** App shell: nav rail + top bar + page content (DESIGN.md §5.3). */
 export function AppShell() {
-  const title = useRouteTitle();
+  const { title, fullBleed = false } = useRouteHandle();
   const navigate = useNavigate();
   useGoToShortcuts(GO_TO_TARGETS, navigate);
 
@@ -137,7 +137,7 @@ export function AppShell() {
           <h1 className={styles.pageTitle}>{title}</h1>
           <TasksChip />
         </header>
-        <main id="main" className={styles.content} tabIndex={-1}>
+        <main id="main" className={fullBleed ? styles.fullBleed : styles.content} tabIndex={-1}>
           <Outlet />
         </main>
       </div>

@@ -198,6 +198,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** editorStore reducer + undo; TokenInput; hotkeys; Playwright: drop fixture → auto-selected region → type token → generate → accept → export file downloaded; profile-not-ready banner; detection-failed manual region path.
 - **Done when:** J3 completes in ≤ 5 interactions on a fixture; keyboard-only run possible.
+- **Status (2026-10-20): DONE.** Home (new-job drop zone with remembered profile, recent jobs, profile readiness, first-run guide) and Editor (`/editor/:jobId`, full-bleed): canvas with zoom/pan (wheel, drag, keys), pixelated ≥ 200 %, detected/selected overlays, draggable and keyboard-nudged corner handles, before/after, split slider, mask overlay, status bar; Regions panel; Inspector with old-token correction, live-validated token input, Generate with task progress, Adjustments (debounced auto re-render, undo/redo, reset), Characters with glyph variant picker, Quality report, Accept/Reject/Export/Edit again; unsaved-result guard. 61 unit tests; Playwright with the real engine: drop → auto-selected region → type → Ctrl+Enter → accept → export download (5 interactions), adjustment re-render + undo, axe clean. Decision: the `G` key stays with "go to" navigation, so the per-character box overlay (DESIGN §10.1 `G`) is not built; the text-regions toggle is a toolbar button.
 
 ## Phase 11 — Learning loop
 

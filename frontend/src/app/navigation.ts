@@ -40,4 +40,6 @@ export const GO_TO_TARGETS: Record<string, string> = Object.fromEntries(
 
 export interface RouteHandle {
   title: string;
+  /** Content fills the area without padding or max width (the Editor). */
+  fullBleed?: boolean;
 }
