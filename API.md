@@ -104,7 +104,8 @@ Clients poll `GET /tasks/{id}` (recommended 500 ms) until `succeeded | failed | 
   "selected_region_id": "r1", "selected_quad": [[812,233],[1190,229],[1191,281],[813,285]],
   "original_text": "A7-204913", "new_text": "A7-204914",
   "params": { "dx": 0, "dy": 0, "scale": 1.0, "spacing": 0, "weight": 0, "blur": 0, "ink_tone": 0, "grain": 1.0, "glyph_overrides": {} },
-  "glyphs_used": [ { "position": 0, "char": "A", "source": "same_image", "glyph_id": null } ],
+  "glyphs_used": [ { "position": 8, "char": "4", "source": "same_image", "glyph_id": null, "score": 0.93 }, { "position": 0, "char": "A", "source": "kept", "glyph_id": null, "score": null } ],
+  "layout_mode": "slots", "warnings": [],
   "quality": { "overall": "pass", "checks": [ { "id": "ocr_readback", "status": "pass", "value": "A7-204914" }, { "id": "seam", "status": "pass", "value": 0.04, "threshold": 0.12 } ] },
   "engine_version": "glyph_transplant@1.0.0", "seed": 18342, "reject_reason": null, "error_code": null,
   "accepted_at": null, "exported_at": null, "created_at": "…", "updated_at": "…" }
@@ -181,12 +182,12 @@ Validation: `username` 3–32 `^[a-z0-9_.-]+$` (lower-cased); `password` 10–12
 | POST | `/jobs` | Create from target image | `multipart`: `file`, `profile_id`. Validates file (§5). → `202` `{ job: EditJob, task: Task(detect) }`. Profile may be not-ready (detection still useful); render will enforce coverage. |
 | GET | `/jobs` | History list | Filters: `profile_id`, `status` (csv), `quality` (`pass|warn|fail`), `from`, `to` (dates), `q` (token prefix search on old/new text), `include_batch_items` (default false). |
 | GET | `/jobs/{id}` | Detail | Full EditJob. |
-| PUT | `/jobs/{id}/region` | Select/adjust region | `{ region_id?: string, quad?: [[x,y]×4] }` (one required; quad must be convex, inside image bounds, area ≥ 64 px²). Allowed in `detected|rendered|rejected` → status `detected`, invalidates cache. Returns EditJob with re-read `original_text`. |
-| POST | `/jobs/{id}/render` | Generate / re-generate | `{ new_text, params? }`. Validates charset/pattern/coverage synchronously → `422 CHAR_NOT_IN_CHARSET` / `PATTERN_MISMATCH` (strict only) / `409 PROFILE_NOT_READY` with `details.missing`. Otherwise `202` Task(render). Params ranges: `dx,dy` −50…50 px; `scale` 0.8–1.2; `spacing` −10…10 px; `weight` −1…1; `blur` −2…2 σ; `ink_tone` −1…1; `grain` 0–3; `glyph_overrides` `{ "<position>": "<glyph_id>" }`. |
+| PUT | `/jobs/{id}/region` | Select/adjust region | `{ region_id?: string, quad?: [[x,y]×4], original_text?: string }` (one of region_id/quad required; quad must be convex, inside image bounds, area ≥ 64 px²). `original_text` corrects the old token when OCR misread it (a drawn quad is re-read by OCR; if that fails it stays null and render answers `409 INVALID_STATE` with `details.field = "original_text"`). Allowed in `detected|rendered|rejected|failed` → status `detected`, clears the result. |
+| POST | `/jobs/{id}/render` | Generate / re-generate | `{ new_text, params? }`. Validates charset/pattern/coverage synchronously → `422 CHAR_NOT_IN_CHARSET` / `PATTERN_MISMATCH` (strict only) / `409 PROFILE_NOT_READY` with `details.missing`. Otherwise `202` Task(render). An identical request already in flight returns that task; a different one while the previous is still queued replaces its payload (same task); a render superseded by a newer queued one does not overwrite the job. Params ranges: `dx,dy` −50…50 px; `scale` 0.8–1.2; `spacing` −10…10 px; `weight` −1…1; `blur` −2…2 σ; `ink_tone` −1…1; `grain` 0–3; `glyph_overrides` `{ "<position>": "<glyph_id>" }`. |
 | GET | `/jobs/{id}/glyph-variants?position=n` | Alternatives for one character (Should) | Top 6 glyphs with similarity scores. |
 | POST | `/jobs/{id}/accept` | Accept | Only from `rendered`. Applies learning update + audit in one transaction. Idempotent on `accepted`. |
 | POST | `/jobs/{id}/reject` | Reject | `{ reason? (≤ 300) }`. From `rendered`. Updates glyph reject counts. |
-| POST | `/jobs/{id}/export` | Produce export file | `{ format?: "original"|"jpeg"|"png"|"tiff", filename_pattern? }`. Only `accepted`. Sync (fast) → `201` `{ file: FileRef, download_name }`. Audit `job.exported`. |
+| POST | `/jobs/{id}/export` | Produce export file | `{ format?: "original"|"jpeg"|"png"|"tiff", filename_pattern? }`. Only `accepted`. Sync (fast) → `201` `{ file: FileRef, download_name }`. Format, size, DPI and ICC from the input; JPEG with the source's quantisation tables (or `export.jpeg_quality_mode`); edit marker (JPEG comment / PNG `Software` / TIFF Software tag) unless `export.metadata_marker` is false. Audit `job.exported`. |
 | POST | `/jobs/{id}/reopen` | Copy into a new editable job (same input, region, params) | `201` EditJob. |
 | DELETE | `/jobs/{id}` | Delete job | Not allowed for batch items of running batches (`409`). `204`. Audit `job.deleted`. |
 

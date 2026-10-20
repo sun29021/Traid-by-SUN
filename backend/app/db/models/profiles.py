@@ -114,6 +114,10 @@ class Glyph(Base):
             "use_count >= 0 AND accept_count >= 0 AND reject_count >= 0", name="counters"
         ),
         CheckConstraint("json_valid(source_quad)", name="source_quad_json"),
+        CheckConstraint(
+            "(source_reference_id IS NOT NULL) + (source_job_id IS NOT NULL) <= 1",
+            name="one_source",
+        ),
         Index(
             "ix_glyphs_profile_id_char_status_quality_score",
             "profile_id",
@@ -122,13 +126,17 @@ class Glyph(Base):
             "quality_score",
         ),
         Index("ix_glyphs_source_reference_id", "source_reference_id"),
+        Index("ix_glyphs_source_job_id", "source_job_id"),
     )
 
     id: Mapped[str] = id_column()
     profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id", ondelete="CASCADE"))
-    # Glyphs harvested from edit jobs (source_job_id) arrive with the jobs table (Phase 9).
     source_reference_id: Mapped[str | None] = mapped_column(
         ForeignKey("reference_images.id", ondelete="CASCADE")
+    )
+    # Glyph harvested from an accepted job's original pixels (Phase 11).
+    source_job_id: Mapped[str | None] = mapped_column(
+        ForeignKey("edit_jobs.id", ondelete="SET NULL")
     )
     crop_file_id: Mapped[str] = mapped_column(ForeignKey("files.id", ondelete="RESTRICT"))
     char: Mapped[str] = mapped_column(String(1))
@@ -145,6 +153,7 @@ class Glyph(Base):
     light_dir_deg: Mapped[float | None] = mapped_column(Float)
     ocr_confidence: Mapped[float] = mapped_column(Float)
     quality_score: Mapped[float] = mapped_column(Float)
+    baseline_y: Mapped[float | None] = mapped_column(Float)  # text baseline in the crop (px)
     use_count: Mapped[int] = mapped_column(Integer, default=0)
     accept_count: Mapped[int] = mapped_column(Integer, default=0)
     reject_count: Mapped[int] = mapped_column(Integer, default=0)

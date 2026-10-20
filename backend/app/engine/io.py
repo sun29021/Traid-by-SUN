@@ -12,7 +12,7 @@ import io
 from typing import Any, cast
 
 import numpy as np
-from PIL import Image, ImageOps, JpegImagePlugin
+from PIL import Image, ImageOps, JpegImagePlugin, PngImagePlugin
 
 from app.engine.types import DecodedImage, GrayImage, ImageFormat, RGBImage
 
@@ -84,11 +84,14 @@ def encode_image(
     alpha: GrayImage | None = None,
     fmt: ImageFormat | None = None,
     jpeg_quality: int | None = None,
+    marker: str | None = None,
 ) -> bytes:
     """Encode `rgb` with the source's format, DPI, ICC profile and JPEG tables.
 
     `fmt` overrides the format; `jpeg_quality` forces a fixed quality instead of the
     source's tables. Alpha defaults to the source's alpha (unchanged outside edits).
+    `marker` is written as the file's software/comment metadata (PRD FR-E11, D-06):
+    JPEG comment, PNG `Software` text chunk, TIFF Software tag.
     """
     target = fmt or like.format
     alpha = alpha if alpha is not None else like.alpha
@@ -116,6 +119,16 @@ def encode_image(
         options["compression"] = like.tiff_compression or "tiff_lzw"
     elif target == "PNG":
         options["optimize"] = False
+
+    if marker:
+        if target == "JPEG":
+            options["comment"] = marker.encode("utf-8")
+        elif target == "PNG":
+            info = PngImagePlugin.PngInfo()
+            info.add_text("Software", marker)
+            options["pnginfo"] = info
+        else:
+            options["tiffinfo"] = {305: marker}  # Software
 
     buffer = io.BytesIO()
     image.save(buffer, format=target, **options)

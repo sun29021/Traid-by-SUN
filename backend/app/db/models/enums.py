@@ -99,6 +99,36 @@ class GlyphStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class JobStatus(StrEnum):
+    UPLOADED = "uploaded"
+    DETECTING = "detecting"
+    DETECTED = "detected"
+    RENDERING = "rendering"
+    RENDERED = "rendered"
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    FAILED = "failed"
+
+
+class QualityStatus(StrEnum):
+    PASS = "pass"  # noqa: S105 — a quality verdict, not a secret
+    WARN = "warn"
+    FAIL = "fail"
+
+
+class GlyphSourceKind(StrEnum):
+    SAME_IMAGE = "same_image"
+    BANK = "bank"
+
+
+class BatchStatus(StrEnum):
+    QUEUED = "queued"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+
 def check_in(column: str, values: type[StrEnum]) -> str:
     """SQL for `column IN ('a', 'b', …)` built from an enum, so DB and code never drift."""
     quoted = ", ".join(f"'{member.value}'" for member in values)

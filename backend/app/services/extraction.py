@@ -116,6 +116,7 @@ def _store(
                     light_dir_deg=m.light_dir_deg % 360 if m.light_dir_deg is not None else None,
                     ocr_confidence=candidate.ocr_confidence,
                     quality_score=m.quality,
+                    baseline_y=round(candidate.baseline_y, 2),
                 ),
             )
             added += 1

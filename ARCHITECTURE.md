@@ -111,7 +111,7 @@ engine/
 **Synthesizer interface** (FR-E14): `render(context, new_text, params) -> RenderResult`. MVP implementation: `GlyphTransplantSynthesizer`. Phase 2 adds `GenerativeSynthesizer` behind the same interface, selected per profile.
 
 ### 3.3 Caching for fast re-renders
-Per edit job the worker persists intermediate artefacts on first render: rectified crop, character boxes, removal mask, inpainted background (as files referenced in job `artifacts`). Re-renders after an adjustment reuse them and only redo layout → harmonize → composite → verify (target ≤ 3 s on CPU). Cache is invalidated when the region quad changes.
+The worker keeps small in-process LRU caches (Phase 9): decoded input images, prepared regions (rectified strip, segmentation, same-image glyphs, measured look; keyed by input + quad + old text + blend mode), glyph crops, and text-removal results (keyed by region + removed slots + seed, inside the synthesizer). A re-render after an adjustment therefore only redoes layout → harmonize → composite → verify: measured ≈ 0.6 s on CPU for a 960×640 photo (target ≤ 3 s). Changing the quad or old text changes the key. After a restart the first render recomputes everything (≈ 10 s more when LaMa is needed); persisting the background (`edit_jobs.background_file_id`) is reserved for later.
 
 Batch items with the same template share the template's inpainted background and geometry, so each item only runs layout → harmonize → composite → verify.
 

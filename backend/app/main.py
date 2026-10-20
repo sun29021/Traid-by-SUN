@@ -33,7 +33,9 @@ from app.core.request_context import REQUEST_ID_HEADER, request_id_middleware
 from app.db.engine import Database, run_migrations
 from app.engine.detect import PaddleOcr, TextDetector
 from app.engine.models import ModelRegistry
+from app.engine.pipeline import GlyphTransplantSynthesizer
 from app.services.extraction import ExtractionDeps
+from app.services.job_engine import JobDeps
 from app.services.owner import ensure_local_owner
 from app.storage.filestore import FileStore
 from app.worker.handlers import create_handlers
@@ -65,9 +67,14 @@ def create_app(
             settings.model_dir, device=settings.device, gpu_device_id=settings.gpu_device_id
         )
         store = FileStore(settings.data_dir / "files")
-        handlers = create_handlers(
-            ExtractionDeps(db=db, store=store, detector=detector or PaddleOcr(models))
+        ocr = detector or PaddleOcr(models)
+        job_deps = JobDeps(
+            db=db,
+            store=store,
+            detector=ocr,
+            synthesizer=GlyphTransplantSynthesizer(registry=models, detector=ocr),
         )
+        handlers = create_handlers(ExtractionDeps(db=db, store=store, detector=ocr), job_deps)
         runner = TaskRunner(db, handlers)
         runner.recover_interrupted()
         if start_worker:
@@ -78,6 +85,7 @@ def create_app(
         app.state.file_store = store
         app.state.task_runner = runner
         app.state.models = models
+        app.state.job_deps = job_deps
         try:
             yield
         finally:

@@ -99,6 +99,177 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Jobs
+         * @description History, newest first. `q` matches the start of the old or new token.
+         */
+        get: operations["list_jobs_api_v1_jobs_get"];
+        put?: never;
+        /**
+         * Create Job
+         * @description Store the image and start text detection (task returned).
+         */
+        post: operations["create_job_api_v1_jobs_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Job */
+        get: operations["get_job_api_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Job */
+        delete: operations["delete_job_api_v1_jobs__job_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accept */
+        post: operations["accept_api_v1_jobs__job_id__accept_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Export */
+        post: operations["export_api_v1_jobs__job_id__export_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/glyph-variants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Glyph Variants
+         * @description Top 6 real glyphs for one character of the new token, best first.
+         */
+        get: operations["get_glyph_variants_api_v1_jobs__job_id__glyph_variants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/region": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Region
+         * @description Choose a detected region or draw a quad (old text is re-read by OCR).
+         */
+        put: operations["set_region_api_v1_jobs__job_id__region_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reject */
+        post: operations["reject_api_v1_jobs__job_id__reject_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/render": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Render
+         * @description Validate the new token now, render in the background (an identical request in
+         *     flight is returned instead of starting another).
+         */
+        post: operations["render_api_v1_jobs__job_id__render_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{job_id}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reopen */
+        post: operations["reopen_api_v1_jobs__job_id__reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/profiles": {
         parameters: {
             query?: never;
@@ -435,6 +606,16 @@ export interface components {
             /** User Id */
             user_id: string | null;
         };
+        /** Body_create_job_api_v1_jobs_post */
+        Body_create_job_api_v1_jobs_post: {
+            /**
+             * File
+             * @description Target image: JPEG, PNG or TIFF
+             */
+            file: string;
+            /** Profile Id */
+            profile_id: string;
+        };
         /** Body_upload_references_api_v1_profiles__profile_id__references_post */
         Body_upload_references_api_v1_profiles__profile_id__references_post: {
             /**
@@ -481,6 +662,14 @@ export interface components {
         DataEnvelope_BulkResult_: {
             data: components["schemas"]["BulkResult"];
         };
+        /** DataEnvelope[EditJobOut] */
+        DataEnvelope_EditJobOut_: {
+            data: components["schemas"]["EditJobOut"];
+        };
+        /** DataEnvelope[ExportOut] */
+        DataEnvelope_ExportOut_: {
+            data: components["schemas"]["ExportOut"];
+        };
         /** DataEnvelope[GlyphOut] */
         DataEnvelope_GlyphOut_: {
             data: components["schemas"]["GlyphOut"];
@@ -489,10 +678,19 @@ export interface components {
         DataEnvelope_Health_: {
             data: components["schemas"]["Health"];
         };
+        /** DataEnvelope[JobCreated] */
+        DataEnvelope_JobCreated_: {
+            data: components["schemas"]["JobCreated"];
+        };
         /** DataEnvelope[list[CoverageItem]] */
         DataEnvelope_list_CoverageItem__: {
             /** Data */
             data: components["schemas"]["CoverageItem"][];
+        };
+        /** DataEnvelope[list[GlyphVariantOut]] */
+        DataEnvelope_list_GlyphVariantOut__: {
+            /** Data */
+            data: components["schemas"]["GlyphVariantOut"][];
         };
         /** DataEnvelope[list[ProfileOut]] */
         DataEnvelope_list_ProfileOut__: {
@@ -523,6 +721,53 @@ export interface components {
         DataEnvelope_Welcome_: {
             data: components["schemas"]["Welcome"];
         };
+        /** EditJobOut */
+        EditJobOut: {
+            /** Accepted At */
+            accepted_at: string | null;
+            /** Batch Id */
+            batch_id: string | null;
+            /** Created At */
+            created_at: string;
+            /** Engine Version */
+            engine_version: string | null;
+            /** Error Code */
+            error_code: string | null;
+            /** Exported At */
+            exported_at: string | null;
+            /** Glyphs Used */
+            glyphs_used: components["schemas"]["GlyphUseOut"][];
+            /** Id */
+            id: string;
+            input: components["schemas"]["FileRef"];
+            /** Layout Mode */
+            layout_mode: ("slots" | "relayout") | null;
+            mask: components["schemas"]["FileRef"] | null;
+            /** New Text */
+            new_text: string | null;
+            /** Original Text */
+            original_text: string | null;
+            params: components["schemas"]["RenderParamsIn"];
+            /** Profile Id */
+            profile_id: string;
+            quality: components["schemas"]["QualityOut"] | null;
+            /** Regions */
+            regions: components["schemas"]["RegionOut"][];
+            /** Reject Reason */
+            reject_reason: string | null;
+            result: components["schemas"]["FileRef"] | null;
+            /** Seed */
+            seed: number;
+            /** Selected Quad */
+            selected_quad: number[][] | null;
+            /** Selected Region Id */
+            selected_region_id: string | null;
+            status: components["schemas"]["JobStatus"];
+            /** Updated At */
+            updated_at: string;
+            /** Warnings */
+            warnings: string[];
+        };
         /** EngineStatus */
         EngineStatus: {
             /** Available Devices */
@@ -533,6 +778,19 @@ export interface components {
             models: components["schemas"]["ModelStatus"][];
             /** Ready */
             ready: boolean;
+        };
+        /** ExportOut */
+        ExportOut: {
+            /** Download Name */
+            download_name: string;
+            file: components["schemas"]["FileRef"];
+        };
+        /** ExportRequest */
+        ExportRequest: {
+            /** Filename Pattern */
+            filename_pattern?: string | null;
+            /** Format */
+            format?: ("original" | "jpeg" | "png" | "tiff") | null;
         };
         /** FileRef */
         FileRef: {
@@ -633,6 +891,36 @@ export interface components {
             char?: string | null;
             status?: components["schemas"]["GlyphStatus"] | null;
         };
+        /** GlyphUseOut */
+        GlyphUseOut: {
+            /** Char */
+            char: string;
+            /** Glyph Id */
+            glyph_id: string | null;
+            /** Position */
+            position: number;
+            /** Score */
+            score: number | null;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "same_image" | "bank" | "kept";
+        };
+        /** GlyphVariantOut */
+        GlyphVariantOut: {
+            /** Crop Url */
+            crop_url: string | null;
+            /** Glyph Id */
+            glyph_id: string | null;
+            /** Score */
+            score: number;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "same_image" | "bank";
+        };
         /** Health */
         Health: {
             /**
@@ -648,10 +936,26 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** JobCreated */
+        JobCreated: {
+            job: components["schemas"]["EditJobOut"];
+            task: components["schemas"]["TaskOut"];
+        };
+        /**
+         * JobStatus
+         * @enum {string}
+         */
+        JobStatus: "uploaded" | "detecting" | "detected" | "rendering" | "rendered" | "accepted" | "rejected" | "failed";
         /** ListEnvelope[AuditEventOut] */
         ListEnvelope_AuditEventOut_: {
             /** Data */
             data: components["schemas"]["AuditEventOut"][];
+            meta: components["schemas"]["ListMeta"];
+        };
+        /** ListEnvelope[EditJobOut] */
+        ListEnvelope_EditJobOut_: {
+            /** Data */
+            data: components["schemas"]["EditJobOut"][];
             meta: components["schemas"]["ListMeta"];
         };
         /** ListEnvelope[GlyphOut] */
@@ -800,6 +1104,30 @@ export interface components {
             /** Use Auto Glyphs */
             use_auto_glyphs?: boolean | null;
         };
+        /** QualityCheckOut */
+        QualityCheckOut: {
+            /** Id */
+            id: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pass" | "warn" | "fail";
+            /** Threshold */
+            threshold?: number | null;
+            /** Value */
+            value: number | string | boolean | null;
+        };
+        /** QualityOut */
+        QualityOut: {
+            /** Checks */
+            checks: components["schemas"]["QualityCheckOut"][];
+            /**
+             * Overall
+             * @enum {string}
+             */
+            overall: "pass" | "warn" | "fail";
+        };
         /** ReferenceChange */
         ReferenceChange: {
             reference: components["schemas"]["ReferenceOut"];
@@ -845,6 +1173,94 @@ export interface components {
             /** Skipped */
             skipped: components["schemas"]["UploadIssue"][];
             task: components["schemas"]["TaskOut"] | null;
+        };
+        /** RegionOut */
+        RegionOut: {
+            /** Confidence */
+            confidence: number;
+            /** Id */
+            id: string;
+            /** Quad */
+            quad: number[][];
+            /** Reasons */
+            reasons: string[];
+            /** Score */
+            score: number;
+            /** Text */
+            text: string;
+        };
+        /**
+         * RegionUpdate
+         * @description Choose a detected region or draw one; optionally correct the old text.
+         */
+        RegionUpdate: {
+            /** Original Text */
+            original_text?: string | null;
+            /** Quad */
+            quad?: number[][] | null;
+            /** Region Id */
+            region_id?: string | null;
+        };
+        /** RejectRequest */
+        RejectRequest: {
+            /** Reason */
+            reason?: string | null;
+        };
+        /**
+         * RenderParamsIn
+         * @description Owner adjustments; ranges from API.md §3.6 (distances in rectified pixels).
+         */
+        RenderParamsIn: {
+            /**
+             * Blur
+             * @default 0
+             */
+            blur: number;
+            /**
+             * Dx
+             * @default 0
+             */
+            dx: number;
+            /**
+             * Dy
+             * @default 0
+             */
+            dy: number;
+            /** Glyph Overrides */
+            glyph_overrides?: {
+                [key: string]: string;
+            };
+            /**
+             * Grain
+             * @default 1
+             */
+            grain: number;
+            /**
+             * Ink Tone
+             * @default 0
+             */
+            ink_tone: number;
+            /**
+             * Scale
+             * @default 1
+             */
+            scale: number;
+            /**
+             * Spacing
+             * @default 0
+             */
+            spacing: number;
+            /**
+             * Weight
+             * @default 0
+             */
+            weight: number;
+        };
+        /** RenderRequest */
+        RenderRequest: {
+            /** New Text */
+            new_text: string;
+            params?: components["schemas"]["RenderParamsIn"] | null;
         };
         /**
          * SpacingMode
@@ -1116,6 +1532,373 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DataEnvelope_Health_"];
+                };
+            };
+        };
+    };
+    list_jobs_api_v1_jobs_get: {
+        parameters: {
+            query?: {
+                cursor?: string | null;
+                from?: string | null;
+                include_batch_items?: boolean;
+                limit?: number;
+                profile_id?: string | null;
+                q?: string | null;
+                quality?: string | null;
+                status?: string | null;
+                to?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListEnvelope_EditJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_job_api_v1_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_create_job_api_v1_jobs_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_JobCreated_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_api_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_EditJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_job_api_v1_jobs__job_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    accept_api_v1_jobs__job_id__accept_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_EditJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    export_api_v1_jobs__job_id__export_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ExportRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_ExportOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_glyph_variants_api_v1_jobs__job_id__glyph_variants_get: {
+        parameters: {
+            query: {
+                position: number;
+            };
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_list_GlyphVariantOut__"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_region_api_v1_jobs__job_id__region_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_EditJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reject_api_v1_jobs__job_id__reject_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RejectRequest"] | null;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_EditJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    render_api_v1_jobs__job_id__render_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RenderRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_TaskOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reopen_api_v1_jobs__job_id__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DataEnvelope_EditJobOut_"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

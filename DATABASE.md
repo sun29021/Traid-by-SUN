@@ -128,7 +128,7 @@ Constraints: UNIQUE (`profile_id`, `file_id`) — same image cannot be added twi
 | id | TEXT | no | — | PK |
 | profile_id | TEXT | no | — | FK → profiles.id ON DELETE CASCADE |
 | source_reference_id | TEXT | yes | — | FK → reference_images.id ON DELETE CASCADE |
-| source_job_id | TEXT | yes | — | FK → edit_jobs.id ON DELETE SET NULL (glyph harvested from a target's *original* pixels). **Added with the jobs table (Phase 9/11);** migration `0004_profiles_glyphs` creates glyphs without it |
+| source_job_id | TEXT | yes | — | FK → edit_jobs.id ON DELETE SET NULL (glyph harvested from a target's *original* pixels). Added by migration `0005_edit_jobs` (filled from Phase 11) |
 | crop_file_id | TEXT | no | — | FK → files.id (RGBA PNG: ink texture + soft alpha) |
 | char | TEXT | no | — | Exactly 1 character, must be in profile charset (service-validated) |
 | status | TEXT | no | `'auto'` | CHECK in (`auto`, `confirmed`, `rejected`) |
@@ -144,6 +144,7 @@ Constraints: UNIQUE (`profile_id`, `file_id`) — same image cannot be added twi
 | light_dir_deg | REAL | yes | — | 0…360, dominant lighting direction on the stroke rim; set for relief profiles (`laser_mark`, `engraved`), NULL otherwise |
 | ocr_confidence | REAL | no | — | 0–1 |
 | quality_score | REAL | no | — | 0–1 (sharpness, completeness, isolation) |
+| baseline_y | REAL | yes | — | Text baseline inside the crop (px from its top), measured at extraction; places the glyph vertically. Added by `0005_edit_jobs`; NULL for older glyphs (layout falls back to the ink box) |
 | use_count | INTEGER | no | 0 | CHECK ≥ 0 |
 | accept_count | INTEGER | no | 0 | CHECK ≥ 0 |
 | reject_count | INTEGER | no | 0 | CHECK ≥ 0 |
@@ -180,12 +181,13 @@ Counts by status are derived from `edit_jobs` (not stored).
 | input_file_id | TEXT | no | FK → files.id ON DELETE RESTRICT |
 | status | TEXT | no | CHECK in (`uploaded`, `detecting`, `detected`, `rendering`, `rendered`, `accepted`, `rejected`, `failed`) |
 | regions | TEXT (JSON) | yes | `[{"id":"r1","quad":[[x,y]×4],"text":"A7-204913","confidence":0.97,"score":0.91,"reasons":["pattern","position"]}]` |
+| selected_region_id | TEXT | yes | `regions[].id` the quad came from; NULL for a drawn quad |
 | selected_quad | TEXT (JSON) | yes | Final quad (possibly owner-adjusted) |
 | original_text | TEXT | yes | Old token, ≤ 64 chars |
 | new_text | TEXT | yes | New token, ≤ 64 chars |
 | params | TEXT (JSON) | no | Render adjustments (`{"dx":0,"dy":0,"scale":1,"spacing":0,"weight":0,"blur":0,"ink_tone":0,"grain":1,"glyph_overrides":{}}`) |
-| geometry | TEXT (JSON) | yes | Cached homography, char boxes, baseline, cap height |
-| background_file_id | TEXT | yes | FK → files.id ON DELETE SET NULL (cached inpainted image) |
+| geometry | TEXT (JSON) | yes | `{"render": {layout_mode, glyphs_used, warnings, timings_ms}}` of the current render |
+| background_file_id | TEXT | yes | FK → files.id ON DELETE SET NULL. Reserved: the inpainted background is cached in the worker process for now (ARCHITECTURE §3.3) |
 | mask_file_id | TEXT | yes | FK → files.id ON DELETE SET NULL |
 | result_file_id | TEXT | yes | FK → files.id ON DELETE SET NULL |
 | quality | TEXT (JSON) | yes | QualityReport: `{"ocr_readback":"A7-204914","ocr_match":true,"seam":0.04,"noise_ratio":1.02,…,"overall":"pass"}` |

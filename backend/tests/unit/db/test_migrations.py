@@ -19,6 +19,9 @@ EXPECTED_TABLES = {
     "profiles",
     "reference_images",
     "glyphs",
+    "batches",
+    "edit_jobs",
+    "edit_job_glyphs",
 }
 
 

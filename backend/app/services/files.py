@@ -50,6 +50,48 @@ def store_generated_png(
         )
 
 
+def store_generated_file(
+    session: Session,
+    store: FileStore,
+    *,
+    owner_id: str,
+    data: bytes,
+    kind: FileKind,
+    mime_type: MimeType,
+    width: int | None = None,
+    height: int | None = None,
+    dpi: tuple[float, float] | None = None,
+    has_icc: bool = False,
+    jpeg_quality_est: int | None = None,
+    original_name: str | None = None,
+) -> StoredFile:
+    """Register any file produced by Traid (results, exports, archives). Deduplicated."""
+    digest = sha256_hex(data)
+    with transaction(session):
+        existing = files_repo.get_by_hash(session, owner_id, digest, kind)
+        if existing is not None:
+            return existing
+        storage_path = store.write(data, digest, mime_type)
+        return files_repo.add(
+            session,
+            StoredFile(
+                owner_id=owner_id,
+                sha256=digest,
+                kind=kind.value,
+                mime_type=mime_type.value,
+                byte_size=len(data),
+                width=width,
+                height=height,
+                dpi_x=dpi[0] if dpi else None,
+                dpi_y=dpi[1] if dpi else None,
+                has_icc=int(has_icc),
+                jpeg_quality_est=jpeg_quality_est,
+                storage_path=storage_path,
+                original_name=sanitize_original_name(original_name),
+            ),
+        )
+
+
 @dataclass(frozen=True)
 class StoredUpload:
     file: StoredFile

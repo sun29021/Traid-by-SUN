@@ -179,6 +179,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 
 - **Tests:** full state machine incl. invalid transitions (409); render validation codes; render dedupe (existing task returned); export preserves properties; marker on/off; ownership 404s.
 - **Done when:** a job can go upload → detect → render → accept → export via API.
+- **Status (2026-10-20): DONE.** Migration `0005_edit_jobs` (`batches`, `edit_jobs`, `edit_job_glyphs`; `glyphs.source_job_id`, `glyphs.baseline_y`), `engine/candidates.py` (pattern, learned position, charset, confidence → ranked regions with reasons), `services/jobs.py` (state machine, validation, render dedupe, accept/reject counters + audit, reopen, delete), `services/job_engine.py` (detect/render tasks, OCR re-read of drawn quads, glyph variants, in-process caches), `services/export.py` (format/DPI/ICC, JPEG tables or fixed quality, edit marker, filename pattern), `GET /jobs` history filters. Additions to the API: `original_text` on PUT region, `layout_mode`/`warnings`/`score` on EditJob, `kept` glyph source. 20 API tests incl. PNG export bit-identical outside the changed mask.
 
 ## Phase 10 — Editor UI
 
