@@ -62,14 +62,15 @@ After changing any backend endpoint or schema, regenerate the frontend API types
 powershell -ExecutionPolicy Bypass -File scripts\gen-api-types.ps1
 ```
 
-## Run the production build locally
+## Run Traid (everyday use)
 
 ```powershell
-cd frontend; npm run build; cd ..\backend
-$env:TRAID_ENV = 'production'; .\.venv\Scripts\python.exe -m app
+powershell -ExecutionPolicy Bypass -File scripts\start.ps1
 ```
 
-Then open http://127.0.0.1:8765. The backend serves the built UI and the API from one process, bound to `127.0.0.1` only.
+This builds the user interface the first time (or with `-Build` after an update), starts Traid in production mode and opens http://127.0.0.1:8765. One process serves the UI and the API, bound to `127.0.0.1` only (other computers cannot connect). Stop it with Ctrl+C. Before upgrading an existing database Traid backs it up automatically.
+
+Updating: `git pull`, run `scripts\setup.ps1` again, then `scripts\start.ps1 -Build`.
 
 ## Repository layout
 

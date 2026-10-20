@@ -29,6 +29,7 @@ from app.core.http_security import (
     security_headers,
 )
 from app.core.logging import access_log_middleware, configure_logging
+from app.core.rate_limit import UPLOADS_PER_MINUTE, TokenBucket
 from app.core.request_context import REQUEST_ID_HEADER, request_id_middleware
 from app.db.engine import Database, run_migrations
 from app.engine.detect import PaddleOcr, TextDetector
@@ -96,6 +97,7 @@ def create_app(
         app.state.task_runner = runner
         app.state.models = models
         app.state.job_deps = job_deps
+        app.state.upload_bucket = TokenBucket(UPLOADS_PER_MINUTE, 60.0)
         try:
             yield
         finally:

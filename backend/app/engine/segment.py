@@ -97,6 +97,31 @@ def ink_map(strip: RGBImage, mode: BlendMode) -> tuple[NDArray[np.bool_], Polari
     return ink, polarity
 
 
+# A horizontal run this long (share of the strip width) is a printed rule, underline
+# or label edge, never part of a character.
+_RULE_SHARE = 0.6
+
+
+def remove_rules(ink: NDArray[np.bool_]) -> NDArray[np.bool_]:
+    """Ink without long horizontal lines.
+
+    A rule crossing the token joins every character into one component as wide as the
+    strip, which would then be discarded as a border line and lose all letters
+    (found by the Phase 14 benchmark). Removing the rule first cuts it out of each
+    stroke it crosses; column grouping rejoins the two halves of a cut stroke. The
+    rule stays in the photo: it belongs to the surface, and text removal continues it.
+    """
+    width = ink.shape[1]
+    length = max(3, round(_RULE_SHARE * width))
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (length, 1))
+    rule = cv2.morphologyEx(ink.astype(np.uint8), cv2.MORPH_OPEN, kernel)
+    if not rule.any():
+        return ink
+    # Include the rule's anti-aliased edge rows.
+    rule = cv2.dilate(rule, np.ones((3, 1), np.uint8))
+    return np.asarray(ink & ~rule.astype(bool), dtype=bool)
+
+
 def _clean(ink: NDArray[np.bool_]) -> tuple[NDArray[np.int32], NDArray[np.int32]]:
     """Label components, dropping specks and strip-border artefacts."""
     height, width = ink.shape
@@ -226,6 +251,7 @@ def segment(
     """
     width = strip.shape[1]
     ink, polarity = ink_map(strip, mode)
+    ink = remove_rules(ink)
     component_labels, _ = _clean(ink)
     centers = [p * width for p in positions] if len(positions) == len(labels) else []
     groups = _column_groups(component_labels)

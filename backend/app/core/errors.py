@@ -159,8 +159,11 @@ _HTTP_STATUS_CODES: dict[int, ErrorCode] = {
 
 async def _handle_app_error(_: Request, exc: Exception) -> JSONResponse:
     assert isinstance(exc, AppError)  # noqa: S101 — registered for AppError only
+    retry_after = getattr(exc, "retry_after", None)
     return JSONResponse(
-        status_code=exc.http_status, content=_envelope(exc.code, exc.message, exc.details)
+        status_code=exc.http_status,
+        content=_envelope(exc.code, exc.message, exc.details),
+        headers={"Retry-After": str(retry_after)} if retry_after else None,
     )
 
 

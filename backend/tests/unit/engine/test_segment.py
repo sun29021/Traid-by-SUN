@@ -117,3 +117,19 @@ def test_line_metrics() -> None:
     assert result.cap_height == pytest.approx(true_cap, abs=3)
     assert result.baseline == pytest.approx(true_base, abs=3)
     assert result.pitch > 0
+
+
+@pytest.mark.parametrize("surface", ["print", "paint", "laser_mark"])
+def test_a_line_through_the_text_is_not_a_character(surface: Surface) -> None:
+    """A rule crossing the token used to merge every letter into one discarded blob."""
+    fixture = make_token_image("A7-204913", surface, seed=8, rule=True)
+    strip, truth = _strip_and_truth(fixture)
+
+    result = segment(strip, "A7-204913", [], mode="ink")
+
+    assert result.missing == ()
+    ious = [quad_iou(t, _box_quad(c)) for t, c in zip(truth, result.chars, strict=True)]
+    assert float(np.median(ious)) > 0.7
+    # The rule is not part of any character's ink (it stays in the photo).
+    middle_row = int(np.median([c.y0 + c.height / 2 for c in result.chars]))
+    assert not result.ink[middle_row - 1 : middle_row + 2, : int(result.chars[0].x0)].any()

@@ -256,6 +256,7 @@ Argon2id passwords, sessions, CSRF token, lockout, rate limiting, Sign-in page a
 | 14.5 | `scripts/setup.ps1` / `start.ps1` production flow; README final. |
 
 - **Done when:** all checks pass; production build runs from a clean checkout on the owner's PC.
+- **Status (2026-10-20): DONE except the owner's clean-checkout run.** 14.2: upload rate limit (30/min, token bucket, `Retry-After`); `pip-audit` clean; `npm audit` reports two moderate React Router 6 advisories — the SSR one does not apply (no SSR) and the open-redirect one is mitigated in `safeNextPath` (backslashes/control characters refused, tests added); upgrading to React Router 7 is a breaking change left for later. Security boundaries of ARCHITECTURE §14 re-checked (bind, Host allow-list, request guard, CSP, upload validation, path guards, audit triggers, no token text in logs). 14.3: `tests/eval/bench.py`, all PRD §9 targets met (ARCHITECTURE §10.1); the benchmark found that a line crossing the token broke segmentation — fixed by removing long horizontal runs before component analysis (tests added; fixture eval unchanged at 96/100). 14.4: axe runs on every screen in Playwright (0 serious/critical); tables got a focusable scroll region. 14.5: `scripts/start.ps1` (build if needed, production mode, opens the browser), README run/update/backup/restore sections. Open: the owner runs `setup.ps1` + `start.ps1` on a clean checkout.
 
 ## Phase 15 — Showcase evaluation
 

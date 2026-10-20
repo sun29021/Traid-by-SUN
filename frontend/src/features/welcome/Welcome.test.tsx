@@ -55,6 +55,8 @@ describe('Welcome', () => {
   it('only allows same-app paths after Welcome', () => {
     expect(safeNextPath('/profiles?tab=glyphs')).toBe('/profiles?tab=glyphs');
     expect(safeNextPath(null)).toBe('/');
+    expect(safeNextPath('/a\\..\\\\evil.example')).toBe('/');
+    expect(safeNextPath('/\t/evil.example')).toBe('/');
     expect(safeNextPath('https://evil.example')).toBe('/');
     expect(safeNextPath('//evil.example')).toBe('/');
     expect(safeNextPath('/\\evil.example')).toBe('/');

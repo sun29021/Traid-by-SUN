@@ -143,3 +143,20 @@ def test_system_status_lists_installed_models(settings: Settings) -> None:
         pytest.skip("OCR models not installed")
     ocr = [m for m in engine["models"] if m["name"].startswith("ppocr")]
     assert all(m["present"] and m["checksum_ok"] and not m["loaded"] for m in ocr)
+
+
+def test_uploads_are_rate_limited(accepted_client: TestClient) -> None:
+    from app.core.rate_limit import TokenBucket
+
+    accepted_client.app.state.upload_bucket = TokenBucket(1, 60.0)  # type: ignore[attr-defined]
+    first = accepted_client.post(
+        "/api/v1/jobs", data={"profile_id": "x"}, files={"file": ("a.png", b"x", "image/png")}
+    )
+    second = accepted_client.post(
+        "/api/v1/jobs", data={"profile_id": "x"}, files={"file": ("a.png", b"x", "image/png")}
+    )
+
+    assert first.status_code != 429
+    assert second.status_code == 429
+    assert second.headers["Retry-After"] == "60"
+    assert second.json()["error"]["code"] == "RATE_LIMITED"

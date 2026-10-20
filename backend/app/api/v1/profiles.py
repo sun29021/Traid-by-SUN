@@ -13,6 +13,7 @@ from app.api.deps import (
     parse_csv_enum,
 )
 from app.core.pagination import DEFAULT_LIMIT, MAX_LIMIT
+from app.core.rate_limit import upload_limit
 from app.db.models.enums import GlyphStatus, ReferenceStatus
 from app.schemas.common import DataEnvelope, ListEnvelope, ListMeta
 from app.schemas.profiles import (
@@ -125,6 +126,7 @@ def get_coverage(
     "/{profile_id}/references",
     response_model=DataEnvelope[ReferenceUpload],
     status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(upload_limit)],
 )
 def upload_references(
     profile_id: str,

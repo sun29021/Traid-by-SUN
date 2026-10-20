@@ -16,7 +16,10 @@ export function useWelcome() {
  * `?next=//evil.example` can never redirect off-site.
  */
 export function safeNextPath(next: string | null): string {
-  if (!next || !next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) {
+  // Backslashes and control characters are refused anywhere: browsers treat "\" like
+  // "/", which enables open redirects (React Router advisory GHSA-wrjc-x8rr-h8h6).
+  const unsafe = (c: string) => c === '\\' || c.charCodeAt(0) < 0x20 || c.charCodeAt(0) === 0x7f;
+  if (!next || !next.startsWith('/') || next.startsWith('//') || [...next].some(unsafe)) {
     return '/';
   }
   return next.startsWith('/welcome') ? '/' : next;

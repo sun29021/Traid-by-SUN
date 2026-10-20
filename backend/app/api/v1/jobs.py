@@ -18,6 +18,7 @@ from app.api.deps import (
 )
 from app.core.errors import ValidationFailed
 from app.core.pagination import DEFAULT_LIMIT, MAX_LIMIT
+from app.core.rate_limit import upload_limit
 from app.db.models.enums import JobStatus, QualityStatus
 from app.schemas.common import DataEnvelope, ListEnvelope, ListMeta
 from app.schemas.jobs import (
@@ -58,7 +59,12 @@ def _day(value: date | None, *, end: bool = False) -> datetime | None:
     return moment + timedelta(days=1) if end else moment
 
 
-@router.post("", response_model=DataEnvelope[JobCreated], status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "",
+    response_model=DataEnvelope[JobCreated],
+    status_code=status.HTTP_202_ACCEPTED,
+    dependencies=[Depends(upload_limit)],
+)
 def create_job(
     user: AcceptedUserDep,
     session: SessionDep,
