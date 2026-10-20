@@ -70,3 +70,19 @@ def test_rejects_multi_page_tiff() -> None:
 
 def test_rejects_empty_file() -> None:
     assert _code(b"") == (422, ErrorCode.IMAGE_DECODE_FAILED)
+
+
+def _ultra_hdr_like() -> bytes:
+    """A JPEG with a second embedded picture (how Pixel "Ultra HDR" photos look)."""
+    photo = Image.new("RGB", (64, 48), (200, 120, 40))
+    gain_map = Image.new("RGB", (16, 12), (128, 128, 128))
+    buffer = io.BytesIO()
+    photo.save(buffer, "MPO", save_all=True, append_images=[gain_map])
+    return buffer.getvalue()
+
+
+def test_jpeg_with_an_embedded_gain_map_is_accepted() -> None:
+    info = validate_image(_ultra_hdr_like(), max_bytes=10_000_000, max_pixels=40_000_000)
+
+    assert info.mime_type == MimeType.JPEG
+    assert (info.width, info.height) == (64, 48)  # the photo, not the gain map

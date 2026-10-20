@@ -95,3 +95,15 @@ def test_format_override_and_fixed_quality() -> None:
 
     assert jpeg.format == "JPEG"
     assert jpeg.jpeg_quality_est is not None and abs(jpeg.jpeg_quality_est - 80) <= 2
+
+
+def test_jpeg_with_gain_map_decodes_as_the_photo_and_exports_as_jpeg() -> None:
+    from tests.unit.storage.test_images import _ultra_hdr_like
+
+    decoded = decode_image(_ultra_hdr_like())
+    encoded = encode_image(decoded.rgb, decoded)
+
+    assert decoded.format == "JPEG" and decoded.rgb.shape == (48, 64, 3)
+    assert decoded.jpeg_qtables
+    with Image.open(io.BytesIO(encoded)) as image:
+        assert image.format == "JPEG" and image.size == (64, 48)

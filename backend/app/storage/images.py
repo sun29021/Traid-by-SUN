@@ -59,13 +59,16 @@ def validate_image(data: bytes, *, max_bytes: int, max_pixels: int) -> ImageInfo
 
     try:
         with Image.open(io.BytesIO(data)) as image:
-            if image.format != _PIL_FORMAT[mime]:
+            # Phones (e.g. Pixel "Ultra HDR") save JPEGs with an embedded gain map, which
+            # Pillow reads as MPO. The first image is the photo itself; it is all we use.
+            multi_picture = mime is MimeType.JPEG and image.format == "MPO"
+            if image.format != _PIL_FORMAT[mime] and not multi_picture:
                 raise UnsupportedMediaType("File content does not match a supported image type")
             if image.mode not in _ALLOWED_MODES:
                 raise UnsupportedMediaType(
                     "Only 8-bit RGB, RGBA, grayscale or palette images are supported"
                 )
-            if getattr(image, "n_frames", 1) > 1:
+            if getattr(image, "n_frames", 1) > 1 and not multi_picture:
                 raise UnsupportedMediaType("Multi-page or animated images are not supported")
             width, height = image.size
             if width * height > max_pixels:

@@ -42,7 +42,10 @@ def estimate_jpeg_quality(qtables: dict[int, list[int]] | None) -> int | None:
 def decode_image(data: bytes) -> DecodedImage:
     """Decode JPEG/PNG/TIFF bytes (already validated by app.storage.images)."""
     with Image.open(io.BytesIO(data)) as source:
-        fmt = cast(ImageFormat, source.format)
+        # A JPEG with an embedded gain map (MPO, e.g. Pixel Ultra HDR) is a JPEG whose
+        # first image is the photo; exports are plain JPEGs (the gain map would no
+        # longer match edited pixels).
+        fmt = cast(ImageFormat, "JPEG" if source.format == "MPO" else source.format)
         mode = source.mode
         info = dict(source.info)
         qtables: dict[int, list[int]] | None = None
